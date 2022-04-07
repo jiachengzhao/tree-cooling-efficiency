@@ -64,7 +64,7 @@ dismo::gbm.plot(
   plot.layout = c(2, 4)
 )
 gbms.era5$var.names
-
+bias(data.brt$tce.10.25, gbms.era5$fit)
 
 
 # BRT using ERA5 and Landsat LAI ----
