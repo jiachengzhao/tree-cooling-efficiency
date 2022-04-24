@@ -69,7 +69,6 @@ points(mean.thermal - 80 ~ b, data = b, pch = 21, col = 'black', bg = cols[2], c
 lines(smooth.spline(b$b, b$mean.solar, spar = 0.5), lty = 'longdash')
 lines(smooth.spline(b$b, b$mean.thermal - 80, spar = 0.5), lty = 'longdash')
 # text
-
 mtext(1, text = 'Cloud cover', line = 1.6, cex = 1.1)
 mtext(2, text = expression('Solar radiation (W/m'^2 * ')'), line = 2.4, cex = 1.1, las = 0)
 mtext(4, text = expression('Thermal radiation (W/m'^2 * ')'), line = 2.5, cex = 1.1, las = 0)
