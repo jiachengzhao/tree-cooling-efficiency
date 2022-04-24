@@ -1,6 +1,6 @@
 ## ----------------------------------
 # Title: Cloud cover and radiation
-# Objective: Analyzing the correlation between cloud cover and solar/thermal radiation
+# Objective: Analyzing the relation between cloud cover and solar/thermal radiation
 # Created by: Jiacheng Zhao
 # Created on: 2022-04-24
 # Copyright (c) Jiacheng Zhao, 2021
