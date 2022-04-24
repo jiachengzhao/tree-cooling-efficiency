@@ -1,12 +1,15 @@
+## ----------------------------------
 # Title: Prerequisite
 # Objective: Prerequisite and data processing
 # Created by: Jiacheng Zhao
-# Created on: 2021-08-16
+# Created on: 2022-04-24
 # Copyright (c) Jiacheng Zhao, 2021
 # Beijing Normal University
 # Email: zhaojiacheng@mail.bnu.edu.cn
+## ----------------------------------
 
-# Prerequisite ----
+
+# prerequisite ----
 Sys.setenv(LANG = 'en')
 opar = par(no.readonly = T)
 extrafont::loadfonts(device = 'win')
@@ -14,16 +17,17 @@ require(data.table)
 lapply(list.files('C:/Users/jzhao/Documents/Nutstore/General modules', pattern = 'R$', full.names = T), source)
 source('./functions_v1.2.R')
 
-# Data processing ----
+
+# data processing ----
 ## TCE scatters ----
 scatters = lapply(list.files(pattern = 'tce_scatters.+csv$'), fread)
 # filtering scatters
 scatters = lapply(scatters, scatter.filter)
 
-## Tree canopy cover ----
+## tree canopy cover ----
 tcc = lapply(list.files(pattern = 'tree_canopy_cover.+csv$'), fread)
 
-## Climatic variables ----
+## climatic variables ----
 # ERA 5
 climate = list.files(pattern = 'climate_variables_era5.+csv$')
 # MSWX
@@ -36,7 +40,7 @@ lapply(climate2, function(x) {
   setnames(x, 1:6, c('id', paste0('mswx_', cols)))
 })
 
-## Albedo ----
+## albedo ----
 albedo = lapply(list.files(pattern = 'albedo.+csv$'), fread)
 
 ## LAI ----
@@ -45,13 +49,14 @@ lai = lapply(list.files(pattern = '^lai.*modis'), fread)
 # Landsat LAI
 lai2 = lapply(list.files(pattern = '^lai.*landsat'), fread)
 
-## Trends in LAI, AOD and RH ----
+## trends in LAI, AOD and RH ----
 slope = fread('./slope_of_lai_aod_and_rh_landsat.csv')
 
-## Region and country ----
+## region and country ----
 region = fread('./region.csv', na.strings = NULL)
 
-# Generation of TCE ----
+
+# generation of TCE ----
 tce = lapply(scatters, tce.generator)
 tce.filtered = lapply(tce, function(x) x[a > 0][b < 0][r2 > 0.1])
 # proportion of city filtered by r2
@@ -89,5 +94,6 @@ for (i in 1:4) {
 }
 cat('The number of cities we studied in 2010 is ', length(unique(dl[[3]]$id)), '.\n', sep = '')
 
-# Integrated data ----
+
+# integrated data ----
 re = Reduce(function(x, y) merge.data.table(x, y, by = c('id', 'lon', 'lat', 'region', 'country'), all = T), dl)
