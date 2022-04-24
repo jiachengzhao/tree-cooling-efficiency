@@ -1,13 +1,12 @@
 ## ----------------------------------
 # Title: Contribution
-# Objective: Visualizing the partial contribution of each variable affecting TCE
+# Objective: Visualizing the partial effects of different variables affecting TCE
 # Created by: Jiacheng Zhao
 # Created on: 2021-11-18
 # Copyright (c) Jiacheng Zhao, 2021
 # Beijing Normal University
 # Email: zhaojiacheng@mail.bnu.edu.cn
 ## ----------------------------------
-
 
 
 # BRT data ----
@@ -39,7 +38,6 @@ data.brt = data.table(
 )
 data.brt = data.brt[complete.cases(data.brt)]
 data.brt = data.brt[cloud < 0.7] # cloud cover should be less than 70%
-
 
 
 # BRT using ERA5 and MODIS LAI ----
@@ -89,7 +87,7 @@ dismo::gbm.plot(
   plot.layout = c(2, 4)
 )
 gbms.era5.landsat$var.names = c('albedo', 'lai', 'gdp', 'prec', 'solar', 'vpd', 'ws')
-
+gbms.era5.landsat$contributions$var = c('lai', 'albedo', 'solar', 'vpd', 'prec', 'gdp', 'ws')
 
 
 # BRT using MSWX and MODIS LAI ----
@@ -114,10 +112,35 @@ dismo::gbm.plot(
   plot.layout = c(2, 4)
 )
 gbms.mswx$var.names = c('albedo', 'lai', 'gdp', 'prec', 'solar', 'vpd', 'ws')
+gbms.mswx$contributions$var = c('lai', 'albedo', 'prec', 'gdp', 'solar', 'vpd', 'ws')
 
 
+# BRT using MSWX and Landsat LAI ----
+set.seed(1)
+gbms.mswx.landsat = dismo::gbm.step(
+  data = data.brt, # mask out cities with high cloud cover
+  gbm.x = colnames(data.brt)[c(13, 15:16, 21:24)],
+  gbm.y = 'tce.10.25',
+  family = 'gaussian',
+  tree.complexity = 10,
+  tolerance = 0.01,
+  tolerance.method = 'auto',
+  learning.rate = 0.001,
+  n.folds = 10,
+  bag.fraction = 0.5
+)
+dismo::gbm.plot(
+  gbms.mswx.landsat,
+  smooth = F, rug = F, common.scale = F,
+  y.label = 'Partial effect on TCE',
+  show.contrib = T,
+  plot.layout = c(2, 4)
+)
+gbms.mswx.landsat$var.names = c('albedo', 'lai', 'gdp', 'prec', 'solar', 'vpd', 'ws')
+gbms.mswx.landsat$contributions$var = c('lai', 'albedo', 'prec', 'gdp', 'solar', 'ws', 'vpd')
 
-# Plotting partial effects ----
+
+# plotting partial effects ----
 ## marginal data ----
 marginalData = function(gbms) {
   # marginal list
@@ -169,15 +192,12 @@ names(data.margin.mswx) = c('albedo', 'lai', 'gdp', 'prec', 'solar', 'vpd', 'ws'
 data.margin.mswx = data.margin.mswx[c('lai', 'albedo', 'vpd', 'solar', 'prec', 'gdp', 'ws')]
 
 ## settings ----
-par(
+mypar(
   cex.axis = 1.1,
-  family = 'Calibri',
-  las = 1,
   lwd = 0.1,
   mai = c(0.4, 0.4, 0, 0),
   mfrow = c(4, 2),
   oma = c(0, 32, 1, 2),
-  # pty = 's',
   tck = 0.03
 )
 cex.font = 1.1; cex.legend = 1.1
@@ -220,7 +240,7 @@ at2 = list(
   c(-1, seq(-0.014, 0.04, 0.012), 1)
 )
 ylims.density = list(
-  c(0, 1.2),
+  c(0, 1.3),
   c(0, 33),
   c(0, 1.8),
   c(0, 0.016),
@@ -302,12 +322,24 @@ for (i in 1:length(data.margin.era5)) {
 }
 
 
+# plotting variable contribution ----
+## an ensemble of variable contribution from different combinations of the datasets ----
+contribution = Reduce(
+  function(x, y) merge(x, y, by = 'var'), list(
+    gbms.era5$contributions, gbms.era5.landsat$contributions, gbms.mswx$contributions, gbms.mswx.landsat$contributions
+  )
+)
+setDT(contribution)
+colnames(contribution) = c('var', 'era5.m', 'era5.l', 'era5.m.m', 'era5.m.l')
+contribution[, c('mean', 'sd') := .(rowMeans(.SD), apply(.SD, 1, sd)), .SDcols = c('era5.m', 'era5.l', 'era5.m.m', 'era5.m.l')][order(mean, decreasing = T)]
 
-# Plotting variable contribution ----
+## contribution given by ERA5 + MODIS LAI ----
 contribution.era5 = gbms.era5$contributions
 setDT(contribution.era5)
 contribution.era5$var = factor(contribution.era5$var, levels = contribution.era5$var)
-barplot(
+
+## barplot ----
+bp = barplot(
   rel.inf ~ var,
   data = contribution.era5,
   axes = F, ann = F,
@@ -315,10 +347,23 @@ barplot(
   ylim = c(0, 30),
   col = cols
 )
+
+## error bar ----
+arrows(
+  bp,
+  contribution[order(era5.m, decreasing = T)][, era5.m + sd],
+  bp,
+  contribution[order(era5.m, decreasing = T)][, era5.m - sd],
+  lwd = 0.1, angle = 90, code = 3, length = 0.02
+)
+
+## axis ----
 axis(1, at = c(-10, 10), labels = F, lwd = 0.1, lwd.tick = 0.5)
 axis(2, at = seq(-10, 30, 5), lwd = 0.1, lwd.tick = 0.5, mgp = c(3, 0.2, 0))
 axis(3, at = c(-10, 10), labels = F, lwd = 0.1, lwd.tick = 0)
 axis(4, at = seq(-10, 30, 5), labels = F, lwd = 0.1, lwd.tick = 0)
+
+## text ----
 mtext(1, text = 'Variables', line = label.line - 0.1, cex = cex.font - 0.4, las = 0)
 mtext(2, text = 'Relative contribution (%)', line = label.line + 0.1, cex = cex.font - 0.4, las = 0)
 mtext(3, text = substitute(bold(letter), list(letter = toupper(letters)[8])), line = -1.3, adj = 0.03, cex = cex.font - 0.2)
