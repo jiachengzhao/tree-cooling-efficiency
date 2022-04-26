@@ -39,7 +39,7 @@ mypar(
   tck = 0.017
 )
 # base plot
-baseplotframe(
+jplot(
   b[, .(b, mean.solar)], type = 'n',
   sec.y = T,
   at2 = seq(100, 400, 50), at4 = seq(100, 400, 50), at4.label = seq(180, 480, 50),
