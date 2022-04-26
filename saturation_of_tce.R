@@ -19,7 +19,7 @@ mypar(
   pty = 's',
   tck = 0.017
 )
-cex.point = 0.8; cex.font = 1.1; cex.legend = 1.1
+cex.font = 1.1; cex.legend = 1.1
 pch = 21
 lwd = 0.1; medlwd = 1.4
 boxwex = 0.4
@@ -186,7 +186,6 @@ cat(
   '%.\n',
   sep = ''
 )
-
 # temperate cities
 cat(
   'The relative difference of TCE for 10% TCC at 25° Ta and mean Ta during the growing season for temperate cities is ',
