@@ -273,7 +273,7 @@ for (i in 1:length(data.margin.era5)) {
   polygon(dens$x, dens$y, density = NULL, border = 'gray94', col = 'gray94', lwd = 0.1)
   par(new = T)
   # marginal effect plot
-  baseplotframe(
+  jplot(
     xlim = xlims[[i]],
     ylim = ylims.margin[[i]],
     at1 = at1[[i]],
