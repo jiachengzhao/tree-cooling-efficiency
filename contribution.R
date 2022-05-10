@@ -50,7 +50,7 @@ gbms.era5 = dismo::gbm.step(
   tree.complexity = 10,
   tolerance = 0.01,
   tolerance.method = 'auto',
-  learning.rate = 0.001,
+  learning.rate = 0.005,
   n.folds = 10,
   bag.fraction = 0.5
 )
@@ -294,7 +294,7 @@ for (i in 1:length(data.margin.era5)) {
       seg.len = 0.5,
       cex = 1,
       bty = 'n',
-      inset = c(-0.78, 0), x.intersp = 0.2, y.intersp = 0.5
+      inset = c(-0.84, 0), x.intersp = 0.2, y.intersp = 0.8
     )
   }
   if (i %in% c(3, 4, 5, 7)) {
@@ -311,7 +311,7 @@ for (i in 1:length(data.margin.era5)) {
       seg.len = 0.5,
       cex = 1,
       bty = 'n',
-      inset = c(-0.62, -0.05), x.intersp = 0.2, y.intersp = 0.5
+      inset = c(-0.67, -0.03), x.intersp = 0.2, y.intersp = 0.8
     )
   }
   mtext(1, text = var.names[i], line = label.line, cex = cex.font - 0.4)
