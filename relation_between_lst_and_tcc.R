@@ -7,6 +7,7 @@
 # Beijing Normal University
 # Email: zhaojiacheng@mail.bnu.edu.cn
 ## ----------------------------------
+plot(cars)
 require(tools)
 require(data.table)
 require(raster)
