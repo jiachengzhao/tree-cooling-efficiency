@@ -8,7 +8,7 @@
 # Email: zhaojiacheng@mail.bnu.edu.cn
 ## ----------------------------------
 
-
+require(data.table)
 require(raster)
 # functions ----
 ## function to mosaic images ----
