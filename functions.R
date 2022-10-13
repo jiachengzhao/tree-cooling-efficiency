@@ -1,6 +1,6 @@
 ## ----------------------------------
 # Title: Functions 
-# Objective: Generating an ensemble of functions used in this project
+# Objective: To generating an ensemble of functions used in this project
 # Created by: Jiacheng Zhao
 # Created on: 2022-04-26
 # Copyright (c) Jiacheng Zhao, 2021
@@ -9,7 +9,6 @@
 ## ----------------------------------
 
 # Functions ----
-
 ## scatter filter ----
 scatter.filter = function(data) {
   DT = copy(data)
