@@ -12,15 +12,15 @@
 # prerequisite ----
 Sys.setenv(LANG = 'en')
 opar = par(no.readonly = T)
-extrafont::loadfonts(device = 'win')
+# extrafont::loadfonts(device = 'win')
 require(data.table)
-lapply(list.files('C:/Users/jzhao/Documents/Nutstore/General modules', pattern = 'R$', full.names = T), source)
+lapply(list.files('/Users/jzhao/Nutstore Files/Nutstore/General modules', pattern = 'R$', full.names = T), source)
 source('./functions.R')
 
 
 # data processing ----
 ## TCE scatters ----
-scatters = lapply(list.files(pattern = 'tce_scatters.+csv$'), fread)
+scatters = lapply(list.files(pattern = 'median_scatter.+gfcc+.csv$'), fread)
 # filtering scatters
 scatters = lapply(scatters, scatter.filter)
 
