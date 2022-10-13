@@ -57,6 +57,8 @@ lai2 = lapply(list.files(pattern = '^lai.*landsat'), fread)
 ## trends in LAI, AOD and RH ----
 slope = fread('./slope_of_lai_aod_and_rh_landsat.csv')
 
+## elevation standard deviation (sd) ----
+esd = fread('./elevation_sd.csv', na.strings = NULL)
 
 ## region and country ----
 region = fread('./region.csv', na.strings = NULL)
