@@ -10,19 +10,32 @@
 
 # Functions ----
 ## scatter filter ----
+# scatter.filter = function(data) {
+#   DT = copy(data)
+#   DT[, id_cat := paste(id, image_id, sep = ':')]
+#   ids = DT[, .N, by = id_cat][N > 30, id_cat] # tree cover classes should be not less than 30
+#   ids2 = DT[id_cat %in% ids][, max(cover_class), by = id_cat][V1 > 30, id_cat] # maximum tree cover class should be not less than 30%
+#   return(
+#     DT[id_cat %in% ids2][
+#       cover_class > 0
+#     ][
+#       , !c('id_cat'), with = F
+#     ]
+#   )
+# }
 scatter.filter = function(data) {
-  DT = copy(data)
+  DT = copy(data[count > 10]) # samples for each cover class should be more than 10 
   DT[, id_cat := paste(id, image_id, sep = ':')]
-  ids = DT[, .N, by = id_cat][N > 30, id_cat] # tree cover classes should be not less than 30
-  ids2 = DT[id_cat %in% ids][, max(cover_class), by = id_cat][V1 > 30, id_cat] # maximum tree cover class should be not less than 30%
+  ids = DT[, .N, by = id_cat][N > 30, id_cat] # total tree cover classes should be not less than 30
   return(
-    DT[id_cat %in% ids2][
+    DT[id_cat %in% ids][
       cover_class > 0
     ][
       , !c('id_cat'), with = F
     ]
   )
 }
+
 
 ## power fitting ----
 pf = function(data) {
