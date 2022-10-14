@@ -1,6 +1,6 @@
 ## ----------------------------------
 # Title: Contribution
-# Objective: Visualizing the partial effects of different variables affecting TCE
+# Objective: To visualize the partial effects of different variables affecting TCE
 # Created by: Jiacheng Zhao
 # Created on: 2021-11-18
 # Copyright (c) Jiacheng Zhao, 2021
@@ -38,13 +38,14 @@ data.brt = data.table(
 )
 data.brt = data.brt[complete.cases(data.brt)]
 data.brt = data.brt[cloud < 0.7] # cloud cover should be less than 70%
+data.brt = merge(data.brt, esd, by = 'id')[sd < 100] # elevation sd should be less than 100 (m)
 
 
 # BRT using ERA5 and MODIS LAI ----
 set.seed(1)
 gbms.era5 = dismo::gbm.step(
   data = data.brt, # mask out cities with high cloud cover
-  gbm.x = colnames(data.brt)[c(13:14, 16:20)],
+  gbm.x = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud'),
   gbm.y = 'tce.10.25',
   family = 'gaussian',
   tree.complexity = 10,
@@ -294,7 +295,7 @@ for (i in 1:length(data.margin.era5)) {
       seg.len = 0.5,
       cex = 1,
       bty = 'n',
-      inset = c(-0.84, 0), x.intersp = 0.2, y.intersp = 0.8
+      inset = c(-0.74, -0.06), x.intersp = 0.2, y.intersp = 0.4
     )
   }
   if (i %in% c(3, 4, 5, 7)) {
@@ -311,7 +312,7 @@ for (i in 1:length(data.margin.era5)) {
       seg.len = 0.5,
       cex = 1,
       bty = 'n',
-      inset = c(-0.67, -0.03), x.intersp = 0.2, y.intersp = 0.8
+      inset = c(-0.58, -0.085), x.intersp = 0.2, y.intersp = 0.4
     )
   }
   mtext(1, text = var.names[i], line = label.line, cex = cex.font - 0.4)
