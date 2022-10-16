@@ -62,7 +62,7 @@ gbms.era5 = dismo::gbm.step(
 )
 dismo::gbm.plot(
   gbms.era5,
-  smooth = F, rug = F, common.scale = F,
+  smooth = F, rug = F, common.scale = T,
   y.label = 'Partial effect on TCE',
   show.contrib = T,
   plot.layout = c(2, 4)
