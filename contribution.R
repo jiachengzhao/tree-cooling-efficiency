@@ -34,17 +34,22 @@ data.brt = data.table(
   mswx_prec = apply(re[, grep('mswx_precipitation', names(re), value = F), with = F], 1, mean, na.rm = T), # precipitation [mm]
   mswx_solar = apply(re[, grep('mswx_solar_radiation', names(re), value = F), with = F], 1, mean, na.rm = T), # solar radiation [W/m^2]
   mswx_vpd = apply(re[, grep('mswx_vapor_pressure_deficit', names(re), value = F), with = F], 1, mean, na.rm = T), # VPD [kPa]
-  mswx_ws = apply(re[, grep('mswx_wind_speed', names(re), value = F), with = F], 1, mean, na.rm = T) # wind speed [m/s]
+  mswx_ws = apply(re[, grep('mswx_wind_speed', names(re), value = F), with = F], 1, mean, na.rm = T), # wind speed [m/s]
+  terra_prec = apply(re[, grep('terra_precipitation', names(re), value = F), with = F], 1, mean, na.rm = T), # precipitation [mm]
+  terra_solar = apply(re[, grep('terra_solar_radiation', names(re), value = F), with = F], 1, mean, na.rm = T), # solar radiation [W/m^2]
+  terra_vpd = apply(re[, grep('terra_vapor_pressure_deficit', names(re), value = F), with = F], 1, mean, na.rm = T), # VPD [kPa]
+  terra_ws = apply(re[, grep('terra_wind_speed', names(re), value = F), with = F], 1, mean, na.rm = T) # wind speed [m/s]
 )
 data.brt = data.brt[complete.cases(data.brt)]
 data.brt = data.brt[cloud < 0.7] # cloud cover should be less than 70%
 data.brt = merge(data.brt, esd, by = 'id')[sd < 100] # elevation sd should be less than 100 (m)
+hist(data.brt$tce.10.25)
 
 
 # BRT using ERA5 and MODIS LAI ----
 set.seed(1)
 gbms.era5 = dismo::gbm.step(
-  data = data.brt, # mask out cities with high cloud cover
+  data = data.brt,
   gbm.x = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud'),
   gbm.y = 'tce.10.25',
   family = 'gaussian',
@@ -64,13 +69,14 @@ dismo::gbm.plot(
 )
 gbms.era5$var.names
 bias(data.brt$tce.10.25, gbms.era5$fit)
+finalVariableOrder = c('lai', 'albedo', 'vpd', 'solar', 'cloud', 'gdp', 'ws')
 
 
 # BRT using ERA5 and Landsat LAI ----
 set.seed(1)
 gbms.era5.landsat = dismo::gbm.step(
   data = data.brt, # mask out cities with high cloud cover
-  gbm.x = colnames(data.brt)[c(13, 15:20)],
+  gbm.x = c('lai2', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud'),
   gbm.y = 'tce.10.25',
   family = 'gaussian',
   tree.complexity = 10,
@@ -87,15 +93,16 @@ dismo::gbm.plot(
   show.contrib = T,
   plot.layout = c(2, 4)
 )
-gbms.era5.landsat$var.names = c('albedo', 'lai', 'gdp', 'prec', 'solar', 'vpd', 'ws')
-gbms.era5.landsat$contributions$var = c('lai', 'albedo', 'solar', 'vpd', 'prec', 'gdp', 'ws')
+gbms.era5.landsat$var.names = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+gbms.era5.landsat$contributions$var = c('lai', 'albedo', 'solar', 'vpd', 'gdp', 'cloud', 'ws')
+bias(data.brt$tce.10.25, gbms.era5.landsat$fit)
 
 
 # BRT using MSWX and MODIS LAI ----
 set.seed(1)
 gbms.mswx = dismo::gbm.step(
   data = data.brt, # mask out cities with high cloud cover
-  gbm.x = colnames(data.brt)[c(13:14, 16, 21:24)],
+  gbm.x = c('lai', 'gdp', 'mswx_vpd', 'mswx_solar', 'mswx_ws', 'albedo', 'cloud'),
   gbm.y = 'tce.10.25',
   family = 'gaussian',
   tree.complexity = 10,
@@ -112,15 +119,15 @@ dismo::gbm.plot(
   show.contrib = T,
   plot.layout = c(2, 4)
 )
-gbms.mswx$var.names = c('albedo', 'lai', 'gdp', 'prec', 'solar', 'vpd', 'ws')
-gbms.mswx$contributions$var = c('lai', 'albedo', 'prec', 'gdp', 'solar', 'vpd', 'ws')
-
+gbms.mswx$var.names = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+gbms.mswx$contributions$var = c('lai', 'albedo', 'solar', 'gdp', 'vpd', 'cloud', 'ws')
+bias(data.brt$tce.10.25, gbms.mswx$fit)
 
 # BRT using MSWX and Landsat LAI ----
 set.seed(1)
 gbms.mswx.landsat = dismo::gbm.step(
   data = data.brt, # mask out cities with high cloud cover
-  gbm.x = colnames(data.brt)[c(13, 15:16, 21:24)],
+  gbm.x = c('lai2', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud'),
   gbm.y = 'tce.10.25',
   family = 'gaussian',
   tree.complexity = 10,
@@ -137,11 +144,12 @@ dismo::gbm.plot(
   show.contrib = T,
   plot.layout = c(2, 4)
 )
-gbms.mswx.landsat$var.names = c('albedo', 'lai', 'gdp', 'prec', 'solar', 'vpd', 'ws')
-gbms.mswx.landsat$contributions$var = c('lai', 'albedo', 'prec', 'gdp', 'solar', 'ws', 'vpd')
+gbms.mswx.landsat$var.names = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+gbms.mswx.landsat$contributions$var = c('lai', 'albedo', 'solar', 'vpd', 'gdp', 'cloud', 'ws')
+bias(data.brt$tce.10.25, gbms.mswx.landsat$fit)
 
 
-# plotting partial effects ----
+# Plotting partial effects ----
 ## marginal data ----
 marginalData = function(gbms) {
   # marginal list
@@ -175,95 +183,117 @@ marginalData.normalization = function(gbms, gbms.margin) {
   return(ml)
 }
 
-## marginal data using ETA5 and MODIS LAI ----
+## marginal data using ERA5 and MODIS LAI ----
 # data.margin.era5 = marginalData.normalization(gbms.era5, data.margin.era5.landsat)
 data.margin.era5 = marginalData(gbms.era5)
-names(data.margin.era5) = c('albedo', 'lai', 'gdp', 'prec', 'solar', 'vpd', 'ws')
-data.margin.era5 = data.margin.era5[c('lai', 'albedo', 'vpd', 'solar', 'prec', 'gdp', 'ws')]
+names(data.margin.era5) = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+data.margin.era5 = marginalData.normalization(gbms.era5, data.margin.era5)
+names(data.margin.era5) = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+data.margin.era5 = data.margin.era5[finalVariableOrder]
 
-## marginal data using ETA5 and Landsat LAI ----
+## marginal data using ERA5 and Landsat LAI ----
 data.margin.era5.landsat = marginalData(gbms.era5.landsat)
-gbms.era5.landsat$var.names
-names(data.margin.era5.landsat) = c('albedo', 'lai', 'gdp', 'prec', 'solar', 'vpd', 'ws')
-data.margin.era5.landsat = data.margin.era5.landsat[c('lai', 'albedo', 'vpd', 'solar', 'prec', 'gdp', 'ws')]
+names(data.margin.era5.landsat) = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+data.margin.era5.landsat = marginalData.normalization(gbms.era5.landsat, data.margin.era5.landsat)
+names(data.margin.era5.landsat) = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+data.margin.era5.landsat = data.margin.era5.landsat[finalVariableOrder]
 
 ## marginal data using MSWX and MODIS LAI ----
 data.margin.mswx = marginalData(gbms.mswx)
-names(data.margin.mswx) = c('albedo', 'lai', 'gdp', 'prec', 'solar', 'vpd', 'ws')
-data.margin.mswx = data.margin.mswx[c('lai', 'albedo', 'vpd', 'solar', 'prec', 'gdp', 'ws')]
+names(data.margin.mswx) = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+data.margin.mswx = marginalData.normalization(gbms.mswx, data.margin.mswx)
+names(data.margin.mswx) = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+data.margin.mswx = data.margin.mswx[finalVariableOrder]
 
 ## settings ----
-mypar(
-  cex.axis = 1.1,
+### par ----
+par(
+  cex.axis = 1,
+  las = 1,
   lwd = 0.1,
   mai = c(0.4, 0.4, 0, 0),
   mfrow = c(4, 2),
-  oma = c(0, 32, 1, 2),
+  oma = c(0.5, 32, 1.2, 2),
   tck = 0.03
 )
 cex.font = 1.1; cex.legend = 1.1
-label.line = 1.3
+label.line = 1.4
+
+### color palette ----
 cols = c('dodgerblue', 'seagreen', 'tomato2', 'gold1', 'coral4', 'deeppink', 'gray50')
+
+### xlim ----
 xlims = list(
   c(0, 1.94),
   c(0.085, 0.205),
   c(0, 2.1),
   c(0, 320),
-  c(-100, 2350),
+  c(0.15, 0.75),
   c(-0.1, 2.35),
   c(0, 4.5)
 )
-at1 = list(
-  c(-10, seq(0.2, 2, 0.5), 10),
-  c(-10, seq(0.1, 0.2, 0.03), 10),
-  c(-10, seq(0.3, 2.5, 0.5), 10),
-  c(-10, seq(50, 350, 70), 1000),
-  c(-10000, seq(200, 2500, 600), 10000),
-  c(-10, seq(0.2, 2, 0.6), 10),
-  c(-10, seq(0.8, 10, 1), 100) 
-)
+
+### ylim ----
 ylims.margin = list(
-  c(-0.09, 0.039),
-  c(-0.035, 0.044),
-  c(-0.02, 0.05),
-  c(-0.03, 0.05),
-  c(-0.015, 0.022),
-  c(-0.035, 0.015),
-  c(-0.02, 0.03)
+  c(-0.1, 0.05),
+  c(-0.06, 0.07),
+  c(-0.03, 0.07),
+  c(-0.04, 0.08),
+  c(-0.02, 0.02),
+  c(-0.04, 0.02),
+  c(-0.02, 0.04)
 )
-at2 = list(
-  c(-1, seq(-0.1, 0.07, 0.03), 1),
-  c(-1, seq(-0.026, 0.06, 0.02), 1),
-  c(-1, seq(-0.03, 0.05, 0.018), 1),
-  c(-1, seq(-0.04, 0.04, 0.02), 1),
-  c(-1, seq(-0.01, 0.04, 0.01), 1),
-  c(-1, seq(-0.04, 0.04, 0.012), 1),
-  c(-1, seq(-0.014, 0.04, 0.012), 1)
-)
+
+### ylim (density plot) ----
 ylims.density = list(
   c(0, 1.3),
   c(0, 33),
   c(0, 1.8),
   c(0, 0.016),
-  c(0, 0.0019),
+  c(0, 5.5),
   c(0, 2.5),
   c(0, 1.05)
 )
-var.colnames = c('lai', 'albedo', 'vpd', 'solar', 'prec', 'gdp', 'ws')
+
+### at1 ----
+at1 = list(
+  c(-10, seq(0.2, 2, 0.5), 10),
+  c(-10, seq(0.1, 0.2, 0.03), 10),
+  c(-10, seq(0.3, 2.5, 0.5), 10),
+  c(-10, seq(50, 350, 70), 1000),
+  c(-1, seq(0, 1, 0.1), 2),
+  c(-10, seq(0.2, 2, 0.6), 10),
+  c(-10, seq(0.8, 10, 1), 100) 
+)
+
+### at2 ----
+at2 = list(
+  c(-1, seq(-0.1, 0.07, 0.03), 1),
+  c(-1, seq(-0.05, 0.07, 0.03), 1),
+  c(-1, seq(-0.02, 0.07, 0.02), 1),
+  c(-1, seq(-0.04, 0.1, 0.03), 1),
+  c(-1, seq(-0.02, 0.1, 0.01), 1),
+  c(-1, seq(-0.04, 0.1, 0.02), 1),
+  c(-1, seq(-0.02, 0.04, 0.02), 1)
+)
+
+### x-label ----
 var.names = c(
   'LAI',
-  "City's albedo",
+  "City albedo",
   'VPD (kPa)',
   expression('Solar radiation (W/m'^2 * ')'),
-  'Precipitation (mm)',
+  'Cloud cover',
   'GDP (1e+10 USD)',
   'Wind speed (m/s)'
 )
 
+
 ## plotting ----
 for (i in 1:length(data.margin.era5)) {
+  
   # density plot
-  dens = density(data.brt[, get(var.colnames[i])])
+  dens = density(data.brt[, get(finalVariableOrder[i])], adjust = 2)
   plot(
     -1,
     type = 'n',
@@ -273,16 +303,31 @@ for (i in 1:length(data.margin.era5)) {
   )
   polygon(dens$x, dens$y, density = NULL, border = 'gray94', col = 'gray94', lwd = 0.1)
   par(new = T)
+  
   # marginal effect plot
-  jplot(
-    xlim = xlims[[i]],
-    ylim = ylims.margin[[i]],
-    at1 = at1[[i]],
-    at2 = at2[[i]]
+  plot(
+    0, type = 'n',
+    axes = F, ann = F,
+    xaxs = 'i', yaxs = 'i',
+    xlim = xlims[[i]], ylim = ylims.margin[[i]]
   )
-  lines(smooth.spline(data.margin.era5[[i]], spar = 0.8), col = cols[i], lwd = 1.5)
+  
+  # axis
+  axis(1, at = at1[[i]], lwd = 0.1, mgp = c(3, 0.1, 0))
+  axis(2, at = at2[[i]], lwd = 0.1, mgp = c(3, 0.2, 0))
+  axis(3, at = at1[[i]], labels = F, lwd = 0.1)
+  axis(4, at = at2[[i]], labels = F, lwd = 0.1)
+  
+  # line
+  if (i == 5) {
+    lines(smooth.spline(data.margin.era5[[i]], spar = 1), col = cols[i], lwd = 1.5)
+  } else {
+    lines(smooth.spline(data.margin.era5[[i]], spar = 0.8), col = cols[i], lwd = 1.5)
+  }
   if (i == 1) {
-    lines(smooth.spline(data.margin.era5.landsat[[i]], spar = 0.8), col = cols[i], lwd = 1.5, lty = 'dotdash')
+    lines(smooth.spline(data.margin.era5.landsat[[i]], spar = 0.8), col = cols[i], lwd = 1.5, lty = 'dashed')
+    
+    # legend
     legend(
       'bottomright',
       legend = c(
@@ -290,40 +335,53 @@ for (i in 1:length(data.margin.era5)) {
         'Landsat'
       ),
       col = cols[i],
-      lty = c('solid', 'dotdash'),
+      lty = c('solid', 'dashed'),
       lwd = 1.2,
       seg.len = 0.5,
       cex = 1,
       bty = 'n',
-      inset = c(-0.74, -0.06), x.intersp = 0.2, y.intersp = 0.4
+      inset = c(-0.82, -0.06), x.intersp = 0.2, y.intersp = 0.5
     )
   }
+  
+  # line
   if (i %in% c(3, 4, 5, 7)) {
-    lines(smooth.spline(data.margin.mswx[[i]], spar = 0.8), col = cols[i], lwd = 1.5, lty = 'dotdash')
+    if (i == 4) {
+      lines(smooth.spline(data.margin.mswx[[i]], spar = 1), col = cols[i], lwd = 1.5, lty = 'dashed')
+    } else {
+      lines(smooth.spline(data.margin.mswx[[i]], spar = 0.8), col = cols[i], lwd = 1.5, lty = 'dashed')
+    }
+    
+    # legend
     legend(
-      'topright',
-      legend = c(
+      'topright', legend = c(
         'ERA5',
         'MSWX'
-      ),
-      col = cols[i],
-      lty = c('solid', 'dotdash'),
+      ), col = cols[i],
+      lty = c('solid', 'dashed'),
       lwd = 1.2,
       seg.len = 0.5,
       cex = 1,
       bty = 'n',
-      inset = c(-0.58, -0.085), x.intersp = 0.2, y.intersp = 0.4
+      inset = c(-0.72, -0.05), x.intersp = 0.2, y.intersp = 0.5
     )
   }
+  
+  # x-label
   mtext(1, text = var.names[i], line = label.line, cex = cex.font - 0.4)
-  if (i %in% seq(1, 7, 2)) mtext(2, text = expression('Partial effect on TCE (' * degree * 'C/%)'), line = label.line + 1, cex = cex.font - 0.4, las = 0)
+  
+  # y-label
+  if (i %in% seq(1, 7, 2)) mtext(2, text = expression('Partial effect on TCE (' * degree * 'C/%)'), line = label.line + 1.3, adj = 0.7, cex = cex.font - 0.4, las = 0)
+  
+  # figure number
   mtext(3, text = substitute(bold(letter), list(
     letter = toupper(letters)[i]
-  )), line = -1.3, adj = 0.03, cex = cex.font - 0.2)
+  )), line = -1.3, adj = 0.03, cex = cex.font - 0.3)
+  
 }
 
 
-# plotting variable contribution ----
+# Plotting variable contribution ----
 ## an ensemble of variable contribution from different combinations of the datasets ----
 contribution = Reduce(
   function(x, y) merge(x, y, by = 'var'), list(
@@ -355,7 +413,7 @@ arrows(
   contribution[order(era5.m, decreasing = T)][, era5.m + sd],
   bp,
   contribution[order(era5.m, decreasing = T)][, era5.m - sd],
-  lwd = 0.1, angle = 90, code = 3, length = 0.02
+  lwd = 0.5, angle = 90, code = 3, length = 0.02
 )
 
 ## axis ----
