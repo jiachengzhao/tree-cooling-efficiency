@@ -18,8 +18,8 @@ cv.corr = list()
 for (i in 1:nrow(sens)) {
   set.seed(1)
   mygbms = dismo::gbm.step(
-    data = data.brt, # mask out cities with high cloud cover
-    gbm.x = colnames(data.brt)[c(13:14, 16:20)],
+    data = data.brt,
+    gbm.x = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud'),
     gbm.y = 'tce.10.25',
     family = 'gaussian',
     tree.complexity = sens$tc[i],
