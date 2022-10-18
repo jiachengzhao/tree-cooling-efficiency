@@ -9,22 +9,8 @@
 ## ----------------------------------
 
 # Functions ----
-## scatter filter ----
-# scatter.filter = function(data) {
-#   DT = copy(data)
-#   DT[, id_cat := paste(id, image_id, sep = ':')]
-#   ids = DT[, .N, by = id_cat][N > 30, id_cat] # tree cover classes should be not less than 30
-#   ids2 = DT[id_cat %in% ids][, max(cover_class), by = id_cat][V1 > 30, id_cat] # maximum tree cover class should be not less than 30%
-#   return(
-#     DT[id_cat %in% ids2][
-#       cover_class > 0
-#     ][
-#       , !c('id_cat'), with = F
-#     ]
-#   )
-# }
 scatter.filter = function(data) {
-  DT = copy(data[count > 10]) # samples for each cover class should be more than 10 
+  DT = copy(data)
   DT[, id_cat := paste(id, image_id, sep = ':')]
   ids = DT[, .N, by = id_cat][N > 30, id_cat] # total tree cover classes should be not less than 30
   return(
@@ -36,8 +22,38 @@ scatter.filter = function(data) {
   )
 }
 
+gs.process = function(data) {
+  DT = copy(data)
+  DT[, c('start', 'end') := .(
+    as.Date(start, origin = '1970-01-01'),
+    as.Date(end, origin = '1970-01-01')
+  )]
+  return(DT[complete.cases(DT)])
+}
 
-## power fitting ----
+gs.filter = function(data, gs) {
+  m = merge(data, gs, by = 'id')
+  m[, 'month' := as.numeric(format(lubridate::fast_strptime(date, '%Y/%m/%d'), '%m'))]
+  l = list()
+  for (j in 1:nrow(gs)) {
+    l[[j]] = unique(
+      as.numeric(
+        format(seq(gs[j]$start, gs[j]$end, by = 'day'), '%m') # growing seasons
+      )
+    )
+  }
+  names(l) = gs$id # name each element by city id
+  m.filtered = list()
+  z = 1
+  for (k in unique(m$id)) {
+    m.filtered[[z]] = m[id == k][m[id == k, month] %in% unlist(l[as.character(k)], use.names = F)]
+    z = z + 1
+  }
+  return(
+    rbindlist(m.filtered)[, !c('start', 'end', 'month')] # very fast rbind for list
+  )
+}
+
 pf = function(data) {
   tryCatch({
     fit = nls(
@@ -58,26 +74,19 @@ pf = function(data) {
   error = function(e) {})
 }
 
-## tce generator for a given tree canopy cover ----
 tce.generator = function(data) {
-  re = as.data.table(
-    Reduce(
-      rbind,
-      sapply(split(data, by = c('id', 'image_id')), FUN = pf)
-    )
+  rl = rbindlist(
+    parallel::mclapply(split(data, by = c('id', 'image_id')), FUN = pf)
   )
-  cols = names(re)[3:ncol(re)]
-  re[, (cols) := lapply(.SD, function(x) as.numeric(x)), .SDcols = cols]
   # TCE at 10 % tree canopy cover
-  re[, tce.10 := a * b * 10 ^ (b - 1)]
+  rl[, tce.10 := a * b * 10 ^ (b - 1)]
   # TCE at 20 % tree canopy cover
-  re[, tce.20 := a * b * 20 ^ (b - 1)]
+  rl[, tce.20 := a * b * 20 ^ (b - 1)]
   # TCE at 30 % tree canopy cover
-  re[, tce.30 := a * b * 30 ^ (b - 1)]
-  return(re)
+  rl[, tce.30 := a * b * 30 ^ (b - 1)]
+  return(rl)
 }
 
-## tce generator for a given temperature ----
 tce.generator2 = function(data) {
   
   city = list()
@@ -186,7 +195,6 @@ tce.generator2 = function(data) {
   
 }
 
-## get density ----
 get_density = function(x, y, ...) {
   dens = MASS::kde2d(x, y, ...)
   ix = findInterval(x, dens$x)
