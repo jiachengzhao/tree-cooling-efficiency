@@ -16,9 +16,11 @@ data.brt = data.table(
   lat = re$lat, # latitude
   region = re$region, # region
   country = re$country, # country
+  tce.10.20 = apply(re[, grep('tce.10.20', names(re), value = F), with = F], 1, mean, na.rm = T), # TCE.10.20 [°C/%]
   tce.10.25 = apply(re[, grep('tce.10.25', names(re), value = F), with = F], 1, mean, na.rm = T), # TCE.10.25 [°C/%]
   tce.20.25 = apply(re[, grep('tce.20.25', names(re), value = F), with = F], 1, mean, na.rm = T), # TCE.20.25 [°C/%]
   tce.30.25 = apply(re[, grep('tce.30.25', names(re), value = F), with = F], 1, mean, na.rm = T), # TCE.30.25 [°C/%]
+  tce.10.30 = apply(re[, grep('tce.10.30', names(re), value = F), with = F], 1, mean, na.rm = T), # TCE.10.30 [°C/%]
   tce.10.mean = apply(re[, grep('tce.10.mean', names(re), value = F), with = F], 1, mean, na.rm = T), # TCE.10.mean [°C/%]
   tce.20.mean = apply(re[, grep('tce.20.mean', names(re), value = F), with = F], 1, mean, na.rm = T), # TCE.20.mean [°C/%]
   tce.30.mean = apply(re[, grep('tce.30.mean', names(re), value = F), with = F], 1, mean, na.rm = T), # TCE.30.mean [°C/%]
