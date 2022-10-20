@@ -107,9 +107,13 @@ tce.generator2 = function(data) {
   
   r2.slope.10 = list() # r-square of slope.10
   
+  tce.10.20 = list() # TCE at 10% tree canopy cover and 30 °C air temperature
+  
   tce.10.25 = list() # TCE at 10% tree canopy cover and 25 °C air temperature
   tce.20.25 = list() # TCE at 20% tree canopy cover and 25 °C air temperature
   tce.30.25 = list() # TCE at 30% tree canopy cover and 25 °C air temperature
+  
+  tce.10.30 = list() # TCE at 10% tree canopy cover and 30 °C air temperature
   
   # loop in cities
   i = 1
@@ -147,9 +151,13 @@ tce.generator2 = function(data) {
         
         r2.slope.10[[i]] = as.numeric(bias(abs(d$tce.10), predict(fit.10))[1])
         
+        tce.10.20[[i]] = predict(fit.10, newdata = data.frame(air_temperature = 20))
+        
         tce.10.25[[i]] = predict(fit.10, newdata = data.frame(air_temperature = 25))
         tce.20.25[[i]] = predict(fit.20, newdata = data.frame(air_temperature = 25))
         tce.30.25[[i]] = predict(fit.30, newdata = data.frame(air_temperature = 25))
+        
+        tce.10.30[[i]] = predict(fit.10, newdata = data.frame(air_temperature = 30))
         
         i = i + 1
         
@@ -176,9 +184,11 @@ tce.generator2 = function(data) {
       Reduce(rbind, intcp.a),
       Reduce(rbind, intcp.b),
       Reduce(rbind, r2.slope.10),
+      Reduce(rbind, tce.10.20),
       Reduce(rbind, tce.10.25),
       Reduce(rbind, tce.20.25),
-      Reduce(rbind, tce.30.25)
+      Reduce(rbind, tce.30.25),
+      Reduce(rbind, tce.10.30)
     )
   )
   
@@ -188,7 +198,9 @@ tce.generator2 = function(data) {
     'intcp.10', 'intcp.20', 'intcp.30',
     'slope.a', 'slope.b', 'intcp.a', 'intcp.b',
     'r2.slope.10',
-    'tce.10.25', 'tce.20.25', 'tce.30.25'
+    'tce.10.20',
+    'tce.10.25', 'tce.20.25', 'tce.30.25',
+    'tce.10.30'
   )
   
   return(DT)
