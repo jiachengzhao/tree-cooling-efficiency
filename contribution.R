@@ -46,7 +46,8 @@ data.brt = data.brt[complete.cases(data.brt)]
 data.brt = data.brt[cloud < 0.7] # cloud cover should be less than 70%
 data.brt = merge(data.brt, esd, by = 'id')[sd < 100] # elevation sd should be less than 100 (m)
 hist(data.brt$tce.10.25)
-
+# data.brt = data.brt[tce.10.25 < 0.5] # remove outliers
+fwrite(data.brt, './data_brt.csv')
 
 # BRT using ERA5 and MODIS LAI ----
 set.seed(1)
@@ -210,12 +211,13 @@ data.margin.mswx = data.margin.mswx[finalVariableOrder]
 ## settings ----
 ### par ----
 par(
-  cex.axis = 1,
+  cex.axis = 1.2,
   las = 1,
   lwd = 0.1,
-  mai = c(0.4, 0.4, 0, 0),
-  mfrow = c(4, 2),
-  oma = c(0.5, 32, 1.2, 2),
+  mai = c(0.4, 0.4, 0, 0.1),
+  mfrow = c(2, 4),
+  oma = c(0.5, 2.5, 1.2, 1.5),
+  pty = 's',
   tck = 0.03
 )
 cex.font = 1.1; cex.legend = 1.1
@@ -230,15 +232,15 @@ xlims = list(
   c(0.085, 0.205),
   c(0, 2.1),
   c(0, 320),
-  c(0.15, 0.75),
-  c(-0.1, 2.35),
-  c(0, 4.5)
+  c(0.1, 0.75),
+  c(-0.1, 2.5),
+  c(0, 5.5)
 )
 
 ### ylim ----
 ylims.margin = list(
   c(-0.1, 0.05),
-  c(-0.06, 0.07),
+  c(-0.06, 0.06),
   c(-0.03, 0.07),
   c(-0.04, 0.08),
   c(-0.02, 0.02),
@@ -249,12 +251,12 @@ ylims.margin = list(
 ### ylim (density plot) ----
 ylims.density = list(
   c(0, 1.3),
-  c(0, 33),
+  c(0, 30),
   c(0, 1.8),
-  c(0, 0.016),
-  c(0, 5.5),
-  c(0, 2.5),
-  c(0, 1.05)
+  c(0, 0.015),
+  c(0, 5),
+  c(0, 2.2),
+  c(0, 0.95)
 )
 
 ### at1 ----
@@ -271,10 +273,10 @@ at1 = list(
 ### at2 ----
 at2 = list(
   c(-1, seq(-0.1, 0.07, 0.03), 1),
-  c(-1, seq(-0.05, 0.07, 0.03), 1),
-  c(-1, seq(-0.02, 0.07, 0.02), 1),
+  c(-1, seq(-0.06, 0.07, 0.03), 1),
+  c(-1, seq(-0.03, 0.07, 0.02), 1),
   c(-1, seq(-0.04, 0.1, 0.03), 1),
-  c(-1, seq(-0.02, 0.1, 0.01), 1),
+  c(-1, seq(-0.03, 0.1, 0.01), 1),
   c(-1, seq(-0.04, 0.1, 0.02), 1),
   c(-1, seq(-0.02, 0.04, 0.02), 1)
 )
@@ -315,20 +317,22 @@ for (i in 1:length(data.margin.era5)) {
   )
   
   # axis
-  axis(1, at = at1[[i]], lwd = 0.1, mgp = c(3, 0.1, 0))
-  axis(2, at = at2[[i]], lwd = 0.1, mgp = c(3, 0.2, 0))
+  axis(1, at = at1[[i]], lwd = 0.1, mgp = c(3, 0.2, 0))
+  axis(2, at = at2[[i]], lwd = 0.1, mgp = c(3, 0.3, 0))
   axis(3, at = at1[[i]], labels = F, lwd = 0.1)
   axis(4, at = at2[[i]], labels = F, lwd = 0.1)
   
   # line
   if (i == 5) {
-    lines(smooth.spline(data.margin.era5[[i]], spar = 1), col = cols[i], lwd = 1.5)
+    lines(smooth.spline(data.margin.era5[[i]], spar = 1.1), col = cols[i], lwd = 1.5)
+  } else if (i == 6){
+    lines(smooth.spline(data.margin.era5[[i]], spar = 0.7), col = cols[i], lwd = 1.5)
   } else {
     lines(smooth.spline(data.margin.era5[[i]], spar = 0.8), col = cols[i], lwd = 1.5)
   }
+  
   if (i == 1) {
     lines(smooth.spline(data.margin.era5.landsat[[i]], spar = 0.8), col = cols[i], lwd = 1.5, lty = 'dashed')
-    
     # legend
     legend(
       'bottomright',
@@ -339,16 +343,19 @@ for (i in 1:length(data.margin.era5)) {
       col = cols[i],
       lty = c('solid', 'dashed'),
       lwd = 1.2,
-      seg.len = 0.5,
+      seg.len = 1,
       cex = 1,
       bty = 'n',
-      inset = c(-0.82, -0.06), x.intersp = 0.2, y.intersp = 0.5
+      inset = c(-0.2, 0), x.intersp = 0.2, y.intersp = 0.5
     )
   }
   
   # line
   if (i %in% c(3, 4, 5, 7)) {
+    
     if (i == 4) {
+      lines(smooth.spline(data.margin.mswx[[i]], spar = 1), col = cols[i], lwd = 1.5, lty = 'dashed')
+    } else if (i == 5) {
       lines(smooth.spline(data.margin.mswx[[i]], spar = 1), col = cols[i], lwd = 1.5, lty = 'dashed')
     } else {
       lines(smooth.spline(data.margin.mswx[[i]], spar = 0.8), col = cols[i], lwd = 1.5, lty = 'dashed')
@@ -362,18 +369,19 @@ for (i in 1:length(data.margin.era5)) {
       ), col = cols[i],
       lty = c('solid', 'dashed'),
       lwd = 1.2,
-      seg.len = 0.5,
+      seg.len = 1,
       cex = 1,
       bty = 'n',
-      inset = c(-0.72, -0.05), x.intersp = 0.2, y.intersp = 0.5
+      inset = c(-0.2, 0), x.intersp = 0.2, y.intersp = 0.5
     )
+    
   }
   
   # x-label
-  mtext(1, text = var.names[i], line = label.line, cex = cex.font - 0.4)
+  mtext(1, text = var.names[i], line = label.line + 0.5, cex = cex.font - 0.3)
   
   # y-label
-  if (i %in% seq(1, 7, 2)) mtext(2, text = expression('Partial effect on TCE (' * degree * 'C/%)'), line = label.line + 1.3, adj = 0.7, cex = cex.font - 0.4, las = 0)
+  if (i %in% c(1, 5)) mtext(2, text = expression('Partial effect on TCE.10.25 (' * degree * 'C/%)'), line = label.line + 1.8, adj = 0.7, cex = cex.font - 0.3, las = 0)
   
   # figure number
   mtext(3, text = substitute(bold(letter), list(
@@ -420,12 +428,12 @@ arrows(
 
 ## axis ----
 axis(1, at = c(-10, 10), labels = F, lwd = 0.1, lwd.tick = 0.5)
-axis(2, at = seq(-10, 30, 5), lwd = 0.1, lwd.tick = 0.5, mgp = c(3, 0.2, 0))
+axis(2, at = seq(-10, 35, 5), lwd = 0.1, lwd.tick = 0.5, mgp = c(3, 0.2, 0))
 axis(3, at = c(-10, 10), labels = F, lwd = 0.1, lwd.tick = 0)
-axis(4, at = seq(-10, 30, 5), labels = F, lwd = 0.1, lwd.tick = 0)
+axis(4, at = seq(-10, 35, 5), labels = F, lwd = 0.1, lwd.tick = 0)
 
 ## text ----
-mtext(1, text = 'Variables', line = label.line - 0.1, cex = cex.font - 0.4, las = 0)
-mtext(2, text = 'Relative contribution (%)', line = label.line + 0.1, cex = cex.font - 0.4, las = 0)
+mtext(1, text = 'Variables', line = label.line + 0.25, cex = cex.font - 0.3, las = 0)
+mtext(2, text = 'Relative contribution (%)', line = label.line + 0.4, cex = cex.font - 0.3, las = 0)
 mtext(3, text = substitute(bold(letter), list(letter = toupper(letters)[8])), line = -1.3, adj = 0.03, cex = cex.font - 0.2)
 par(opar)
