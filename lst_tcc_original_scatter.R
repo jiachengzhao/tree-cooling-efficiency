@@ -1,5 +1,5 @@
 # Title: Original scatter
-# Objective: To plot the original scatters between land surface temperature (LST) and tree canopy cover (TCC)
+# Objective: To plot the original scatter between land surface temperature (LST) and tree canopy cover (TCC)
 # Created by: Jiacheng Zhao
 # Created on: 2021-07-18
 # Copyright (c) Jiacheng Zhao, 2021
@@ -19,9 +19,22 @@
 #   names(m) <- names(tif.list[[1]])
 #   return(m)
 # }
-
+opar = par(no.readonly = T)
 library(smot)
 ## function to plot scatters ----
+addeq = function(fit, decimal = 2) {
+    eq = substitute(
+      italic('y') ~ '=' ~ b * italic('x') ^ a,
+      list(
+        a = sprintf(paste0('%.', decimal, 'f'), as.numeric(stats::coef(fit))[2]),
+        b = sprintf(paste0('%.', decimal, 'f'), as.numeric(stats::coef(fit))[1])
+      )
+    )
+  return(eq)
+}
+
+
+
 scatters <- function(
   tree, lst,
   xlabel = expression(bold(paste('TCC (%)'))),
@@ -75,7 +88,7 @@ scatters <- function(
   # add title and r2
   mtext(main, side = 3, line = 0.1, font = 2, cex = 0.75)
   title(city.name, adj = 0.955, line = -1, font.main = 1, col.main = 'black', cex.main = 1.1)
-  # title(addeq(fit), adj = 0.955, line = -2, col.main = 'black', cex.main = 1.1)
+  title(addeq(fit), adj = 0.955, line = -2, col.main = 'black', cex.main = 1.1)
   title(addr2(db$y, predict(fit)), adj = 0.955, line = -3, col.main = 'black', cex.main = 1.1)
 }
 
