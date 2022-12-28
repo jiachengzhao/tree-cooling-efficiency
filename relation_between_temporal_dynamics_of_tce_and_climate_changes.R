@@ -20,6 +20,13 @@ f = function(var1, var2, var3, var4) {
 }
 # trend in TCE
 data.box[, k := mapply(f, tce_2000, tce_2005, tce_2010, tce_2015)]
+# write csv
+# fwrite(data.box, 'tce1025_trend.csv')
+cat('More than ', floor(nrow(data.box[k > 0])/nrow(data.box)*100), '% cities showed an increasing trend of TCE.\n', sep = '') 
+t.test(x = data.box$tce_2000, y = data.box$tce_2015, data = data.box)
+fwrite(data.box, 'data_trend.csv')
+
+
 data.box = merge(region, merge(slope, data.box[, .(id, k)], by = 'id'), by = 'id')[region %in% c(
   'AF', 'AN', 'NE', 'SE', 'WE', 'EE', 'NA', 'SAM', 'EA'
 )]
@@ -43,28 +50,31 @@ data.box$f = factor(data.box$f, levels = c('f', 's'))
 # plotting ----
 cols = c('green', 'red')
 # x-axis bar positions
-myat = box.at(length(unique(data.box$region)), 2, 1.5, 0.4)
+myat = gbat(length(unique(data.box$region)), 2, 1.5, 0.4)
 # par
-mypar(
+par(
   cex.axis = 1.1,
-  mai = c(0.2, 0.3, 0.1, 0.3),
+  # family = 'Calibri',
+  lwd = 0.7,
+  mai = c(0.2, 0.3, 0.1, 0.3), mgp = c(3, 0.2, 0),
   mfrow = c(1, 3),
   oma = c(4, 4, 20, 1),
   pty = 's',
   tck = 0.017
 )
 ## LAI ----
-basegroupedboxframe(
+boxplot(
   lai_slope ~ f:region, data = data.box,
   col = cols,
   ylim = c(-0.01, 0.06),
-  at1 = myat, at1.label = c('AF', 'AN', 'EU', 'NA', 'SA', 'EA'),
-  at2 = seq(-0.01, 0.05, 0.02),
+  at = myat$location,
   medlwd = 0.5, boxwex = 0.3,
-  ann = F
+  ann = F, xaxt = 'n'
 )
+axis(1, myat$center, c('AF', 'AN', 'EU', 'NA', 'SA', 'EA'), lwd = 0.5)
+box(lwd = 0.5)
 abline(h = 0, col = 'blue', lty = 'dashed')
-mtext(2, text = 'Trend in LAI (-/yr)', line = 2.5, cex = 0.7, las = 0)
+mtext(2, text = 'Trend in LAI (-/yr)', line = 2.5, cex = 0.8, las = 0)
 mtext(3, text = substitute(bold(letter), list(
   letter = toupper(letters)[2]
 )), line = -1.4, adj = 0.03, cex = 1)
@@ -82,16 +92,19 @@ legend(
 )
 
 ## AOD ----
-basegroupedboxframe(
+boxplot(
   aod_slope ~ f:region, data = data.box,
   col = cols,
   ylim = c(-0.005, 0.012),
-  at1 = myat, at1.label = c('AF', 'AN', 'EU', 'NA', 'SA', 'EA'),
+  at = myat$location,
   medlwd = 0.5, boxwex = 0.3,
-  ann = F
+  ann = F, xaxt = 'n'
 )
+axis(1, myat$center, c('AF', 'AN', 'EU', 'NA', 'SA', 'EA'), lwd = 0.5)
+# axis(2, )
+box(lwd = 0.5)
 abline(h = 0, col = 'blue', lty = 'dashed')
-mtext(2, text = 'Trend in AOD (-/yr)', line = 2.5, cex = 0.7, las = 0)
+mtext(2, text = 'Trend in AOD (-/yr)', line = 2.5, cex = 0.8, las = 0)
 mtext(3, text = substitute(bold(letter), list(
   letter = toupper(letters)[3]
 )), line = -1.4, adj = 0.03, cex = 1)
@@ -104,21 +117,23 @@ legend(
   ),
   fill = cols,
   cex = 1, bty = 'n',
-  y.intersp = 0.8,
-  inset = c(-0.18, -0.02)
+  y.intersp = 0.8
+  # inset = c(-0.18, -0.02)
 )
 
 ## RH ----
-basegroupedboxframe(
+boxplot(
   rh_slope ~ f:region, data = data.box,
   col = cols,
   ylim = c(-0.6, 0.55),
-  at1 = myat, at1.label = c('AF', 'AN', 'EU', 'NA', 'SA', 'EA'),
+  at = myat$location,
   medlwd = 0.5, boxwex = 0.3,
-  ann = F
+  ann = F, xaxt = 'n'
 )
+axis(1, myat$center, c('AF', 'AN', 'EU', 'NA', 'SA', 'EA'), lwd = 0.5)
+box(lwd = 0.5)
 abline(h = 0, col = 'blue', lty = 'dashed')
-mtext(2, text = 'Trend in RH (-/yr)', line = 2.5, cex = 0.7, las = 0)
+mtext(2, text = 'Trend in RH (-/yr)', line = 2.5, cex = 0.8, las = 0)
 mtext(3, text = substitute(bold(letter), list(
   letter = toupper(letters)[4]
 )), line = -1.4, adj = 0.03, cex = 1)
