@@ -33,24 +33,22 @@ climate = lapply(climate, fread)
 lapply(climate, function(x) x[, c('air_temperature', 'gross_domestic_product') := .(air_temperature - 273.15, gross_domestic_product / 1e10)])
 
 
-climate.x = list.files(pattern = 'climate_variables_era5_annually.+csv$')
-climate.x = lapply(climate.x, fread)
-lapply(climate.x, function(x) x[, c('air_temperature') := .(air_temperature - 273.15)])
-
-pr = lapply(climate.x, function(x) x[, .(id, date, precipitation)][, lapply(.SD, sum), by = .(id), .SDcols = !c('date')])
-others = lapply(climate.x, function(x) x[, .(id, date, air_temperature, wind_speed, vapor_pressure_deficit, solar_radiation, thermal_radiation)][, lapply(.SD, mean), by = .(id), .SDcols = !c('date')])
-
-
-
-for (i in 1:4) {
-  climate.x[[i]] = merge(
-    pr[[i]],
-    others[[i]],
-    by = 'id'
-  )
-}
-
-
+# climate.x = list.files(pattern = 'climate_variables_era5_annually.+csv$')
+# climate.x = lapply(climate.x, fread)
+# lapply(climate.x, function(x) x[, c('air_temperature') := .(air_temperature - 273.15)])
+# 
+# pr = lapply(climate.x, function(x) x[, .(id, date, precipitation)][, lapply(.SD, sum), by = .(id), .SDcols = !c('date')])
+# others = lapply(climate.x, function(x) x[, .(id, date, air_temperature, wind_speed, vapor_pressure_deficit, solar_radiation, thermal_radiation)][, lapply(.SD, mean), by = .(id), .SDcols = !c('date')])
+# 
+# 
+# 
+# for (i in 1:4) {
+#   climate.x[[i]] = merge(
+#     pr[[i]],
+#     others[[i]],
+#     by = 'id'
+#   )
+# }
 
 
 
@@ -62,6 +60,25 @@ lapply(climate2, function(x) {
   cols = names(x)[2:6]
   setnames(x, 1:6, c('id', paste0('mswx_', cols)))
 })
+
+
+### TerraClimate ----
+climate3 = list.files(pattern = 'climate_variables_terra_climate.+csv$')
+climate3 = lapply(climate3, fread)
+lapply(climate3, function(x) {
+  cols = names(x)[2:5]
+  setnames(x, 1:5, c('id', paste0('terra_', cols)))
+})
+
+# ### GLDAS ----
+# climate4 = list.files(pattern = 'climate_variables_gldas.+csv$')
+# climate4 = lapply(climate4, fread)
+# lapply(climate4, function(x) {
+#   cols = names(x)[2:4]
+#   setnames(x, 1:4, c('id', paste0('gldas_', cols)))
+# })
+
+
 
 
 ## albedo ----
@@ -113,7 +130,7 @@ dl = list()
 # merge TCE and other data
 mymerge = function(x, y) merge.data.table(x, y, by = 'id', all = T)
 for (i in 1:4) {
-  dl[[i]] = Reduce(mymerge, list(tce2[[i]], tcc[[i]], climate[[i]], climate2[[i]], albedo[[i]], lai[[i]], lai2[[i]], region))
+  dl[[i]] = Reduce(mymerge, list(tce2[[i]], tcc[[i]], climate[[i]], climate2[[i]], climate3[[i]], albedo[[i]], lai[[i]], lai2[[i]], region))
   # add year label
   dl[[i]][, year := 2000 + 5 * (i - 1)][, year := as.factor(year)]
   # mean TCE during the growing season
