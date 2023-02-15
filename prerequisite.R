@@ -18,7 +18,6 @@ source('./functions.R')
 
 
 # Data processing ----
-
 ## LST-tree cover scatters ----
 scatter = lapply(list.files(pattern = 'scatter.+gfcc+.csv$'), fread)
 # a basic filter
