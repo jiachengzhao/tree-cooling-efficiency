@@ -21,11 +21,14 @@ name = data.table(
 
 
 # par ----
-mypar(
-  mai = c(0.1, 0.15, 0.1, 0.1),
+par(
+  cex.axis = 1,
+  las = 1,
+  lwd = 0.1,
+  mai = c(0.2, 0.3, 0.25, 0.15),
   mfcol = c(4, 4),
-  oma = c(3, 12, 2, 2),
-  tck = 0.025
+  oma = c(3, 4, 2, 2),
+  tck = -0.03
 )
 
 
@@ -33,21 +36,25 @@ mypar(
 for (i in 1:nrow(name)) {
   d = relation[id == name$id[i], .(air_temperature, tce.10)]
   d[, tce.10 := abs(tce.10)]
-  jplot(
-    data = d, axis.style = 'r',
-    ylim = c(0, 0.6),
-    at2 = seq(0, 0.6, 0.1),
-    ann = F
+  plot(
+    tce.10 ~ air_temperature, data = d,
+    xaxs = 'i', yaxs = 'i', axes = F, ann = F,
+    xlim = c(0, 40), ylim = c(0, 0.6)
+    # at2 = seq(0, 0.6, 0.1),
   )
-  points(d$air_temperature, abs(d$tce.10), pch = 21, bg = 'plum1', cex = 1.2)
+  axis(1, lwd = 0.5, mgp = c(3, 0.25, 0))
+  axis(2, at = seq(0, 0.6, 0.15), lwd = 0.5, mgp = c(3, 0.4, 0))
+  axis(3, lwd = 0.5, labels = F, mgp = c(3, 0.25, 0))
+  axis(4, at = seq(0, 0.6, 0.15), labels = F, lwd = 0.5, mgp = c(3, 0.4, 0))
+  points(d$air_temperature, abs(d$tce.10), pch = 21, bg = 'gray80', cex = 1.3)
   fit = MASS::rlm(abs(d$tce.10) ~ air_temperature, data = d)
   abline(fit, lwd = 0.1)
-  ci95(fit, data.frame(air_temperature = seq(min(d$air_temperature), max(d$air_temperature), 0.1)))
-  if (i %in% seq(4, 16, 4)) mtext(1, text = expression('T'[a] * ' (' * degree * 'C)'), line = 1.3, cex = 0.7, las = 0)
-  if (i %in% 1:4) mtext(2, text = expression('TCE.10 (' * degree * 'C/%)'), line = 1.8, cex = 0.7, las = 0)
-  title(name[, name][i], adj = 0.955, line = -8, font.main = 1, col.main = 'black', cex.main = 1.1)
-  title(addeq(fit, 3), adj = 0.18, line = -0.8, col.main = 'black', cex.main = 1.1)
-  title(addr2(d$tce.10, predict(fit)), adj = 0.085, line = -1.8, col.main = 'black', cex.main = 1.1)
+  ci95(d)
+  if (i %in% seq(4, 16, 4)) mtext(1, text = expression('T'[a] * ' (' * degree * 'C)'), line = 1.9, cex = 0.7, las = 0)
+  if (i %in% 1:4) mtext(2, text = expression('TCE.10 (' * degree * 'C/%)'), line = 2.8, cex = 0.7, las = 0)
+  title(name[, name][i], adj = 0.955, line = -6, font.main = 1, col.main = 'black', cex.main = 1)
+  title(addlmeq(fit, 3), adj = 0.18, line = -0.8, col.main = 'black', cex.main = 1)
+  title(addr2(d$tce.10, predict(fit)), adj = 0.085, line = -1.8, col.main = 'black', cex.main = 1)
 }
 
 
