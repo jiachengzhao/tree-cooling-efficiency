@@ -8,27 +8,28 @@
 # Email: zhaojiacheng@mail.bnu.edu.cn
 ## ----------------------------------
 
-# prerequisite ----
+
+# Prerequisite ----
 Sys.setenv(LANG = 'en')
 opar = par(no.readonly = T)
 require(smot)
 require(data.table)
 source('./functions.R')
 
-# data processing ----
-## LST-TCC scatters ----
+
+# Data processing ----
+
+## LST-tree cover scatters ----
 scatter = lapply(list.files(pattern = 'scatter.+gfcc+.csv$'), fread)
 # a basic filter
 scatter = lapply(scatter, scatter.filter)
 
-
-## TCC ----
+## tree cover ----
 tcc = lapply(list.files(pattern = 'tree_canopy_cover.+csv$'), fread)
-
 
 ## climatic variables ----
 ### ERA 5 ----
-climate = grep(list.files(pattern = 'era5'), pattern='annually', invert = T, value = T)
+climate = grep(list.files(pattern = 'era5'), pattern = 'annually', invert = T, value = T)
 climate = lapply(climate, fread)
 lapply(climate, function(x) x[, c('air_temperature', 'gross_domestic_product') := .(air_temperature - 273.15, gross_domestic_product / 1e10)])
 
