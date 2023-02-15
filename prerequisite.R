@@ -18,40 +18,23 @@ source('./functions.R')
 
 
 # Data processing ----
+
 ## LST-tree cover scatters ----
 scatter = lapply(list.files(pattern = 'scatter.+gfcc+.csv$'), fread)
 # a basic filter
 scatter = lapply(scatter, scatter.filter)
 
-## tree cover ----
+## Tree cover ----
 tcc = lapply(list.files(pattern = 'tree_canopy_cover.+csv$'), fread)
 
-## climatic variables ----
+## Tree cover ----
+trend.tcc = fread('./temporal_trends_in_tree_cover.csv')
+
+## Climatic variables ----
 ### ERA 5 ----
 climate = grep(list.files(pattern = 'era5'), pattern = 'annually', invert = T, value = T)
 climate = lapply(climate, fread)
 lapply(climate, function(x) x[, c('air_temperature', 'gross_domestic_product') := .(air_temperature - 273.15, gross_domestic_product / 1e10)])
-
-
-# climate.x = list.files(pattern = 'climate_variables_era5_annually.+csv$')
-# climate.x = lapply(climate.x, fread)
-# lapply(climate.x, function(x) x[, c('air_temperature') := .(air_temperature - 273.15)])
-# 
-# pr = lapply(climate.x, function(x) x[, .(id, date, precipitation)][, lapply(.SD, sum), by = .(id), .SDcols = !c('date')])
-# others = lapply(climate.x, function(x) x[, .(id, date, air_temperature, wind_speed, vapor_pressure_deficit, solar_radiation, thermal_radiation)][, lapply(.SD, mean), by = .(id), .SDcols = !c('date')])
-# 
-# 
-# 
-# for (i in 1:4) {
-#   climate.x[[i]] = merge(
-#     pr[[i]],
-#     others[[i]],
-#     by = 'id'
-#   )
-# }
-
-
-
 
 ### MSWX ----
 climate2 = list.files(pattern = 'climate_variables_mswx.+csv$')
@@ -61,51 +44,26 @@ lapply(climate2, function(x) {
   setnames(x, 1:6, c('id', paste0('mswx_', cols)))
 })
 
-
-### TerraClimate ----
-climate3 = list.files(pattern = 'climate_variables_terra_climate.+csv$')
-climate3 = lapply(climate3, fread)
-lapply(climate3, function(x) {
-  cols = names(x)[2:5]
-  setnames(x, 1:5, c('id', paste0('terra_', cols)))
-})
-
-# ### GLDAS ----
-# climate4 = list.files(pattern = 'climate_variables_gldas.+csv$')
-# climate4 = lapply(climate4, fread)
-# lapply(climate4, function(x) {
-#   cols = names(x)[2:4]
-#   setnames(x, 1:4, c('id', paste0('gldas_', cols)))
-# })
-
-
-
-
-## albedo ----
+## Albedo ----
 albedo = lapply(list.files(pattern = 'albedo.+csv$'), fread)
-
 
 ## LAI ----
 ### MODIS LAI ----
 lai = lapply(list.files(pattern = '^lai.*modis'), fread)
-
 ### Landsat LAI ----
 lai2 = lapply(list.files(pattern = '^lai.*landsat'), fread)
 
-
-## trends in LAI, AOD and RH ----
+## Trends in LAI, AOD and RH ----
 slope = fread('./slope_of_lai_aod_and_rh_landsat.csv')
 
-
-## elevation standard deviation (sd) ----
+## Elevation standard deviation (sd) ----
 esd = fread('./elevation_sd.csv', na.strings = NULL)
 
-
-## region and country ----
+## Region and country ----
 region = fread('./region.csv', na.strings = NULL)
 
 
-# generation of TCE ----
+# Generation of TCE ----
 tce = lapply(scatter, tce.generator)
 tce.filtered = lapply(tce, function(x) x[a > 0][b < 0])
 # proportion of city filtered by r2
@@ -128,9 +86,9 @@ tce2 = lapply(tce2, function(x) x[tce.10.25 > 0])
 # dataset list
 dl = list()
 # merge TCE and other data
-mymerge = function(x, y) merge.data.table(x, y, by = 'id', all = T)
+mymerge = function(x, y) data.table::merge.data.table(x, y, by = 'id')
 for (i in 1:4) {
-  dl[[i]] = Reduce(mymerge, list(tce2[[i]], tcc[[i]], climate[[i]], climate2[[i]], climate3[[i]], albedo[[i]], lai[[i]], lai2[[i]], region))
+  dl[[i]] = Reduce(mymerge, list(tce2[[i]], tcc[[i]], climate[[i]], climate2[[i]], albedo[[i]], lai[[i]], lai2[[i]], region, slope))
   # add year label
   dl[[i]][, year := 2000 + 5 * (i - 1)][, year := as.factor(year)]
   # mean TCE during the growing season
@@ -148,5 +106,5 @@ for (i in 1:4) {
 }
 
 
-# integrated data ----
-re = Reduce(function(x, y) merge.data.table(x, y, by = c('id', 'lon', 'lat', 'region', 'country'), all = T), dl)
+# Data integration ----
+re = Reduce(function(x, y) data.table::merge.data.table(x, y, by = c('id', 'lon', 'lat', 'region', 'country'), all = T), dl)
