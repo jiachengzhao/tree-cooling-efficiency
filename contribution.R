@@ -37,10 +37,7 @@ data.brt = data.table(
   mswx_solar = apply(re[, grep('mswx_solar_radiation', names(re), value = F), with = F], 1, mean, na.rm = T), # solar radiation [W/m^2]
   mswx_vpd = apply(re[, grep('mswx_vapor_pressure_deficit', names(re), value = F), with = F], 1, mean, na.rm = T), # VPD [kPa]
   mswx_ws = apply(re[, grep('mswx_wind_speed', names(re), value = F), with = F], 1, mean, na.rm = T), # wind speed [m/s]
-  terra_prec = apply(re[, grep('terra_precipitation', names(re), value = F), with = F], 1, mean, na.rm = T), # precipitation [mm]
-  terra_solar = apply(re[, grep('terra_solar_radiation', names(re), value = F), with = F], 1, mean, na.rm = T), # solar radiation [W/m^2]
-  terra_vpd = apply(re[, grep('terra_vapor_pressure_deficit', names(re), value = F), with = F], 1, mean, na.rm = T), # VPD [kPa]
-  terra_ws = apply(re[, grep('terra_wind_speed', names(re), value = F), with = F], 1, mean, na.rm = T) # wind speed [m/s]
+  trend_lai = apply(re[, grep('lai_slope', names(re), value = F), with = F], 1, mean, na.rm = T) # wind speed [m/s]
 )
 data.brt = data.brt[complete.cases(data.brt)]
 data.brt = data.brt[cloud < 0.7] # cloud cover should be less than 70%
@@ -49,11 +46,12 @@ hist(data.brt$tce.10.25)
 # data.brt = data.brt[tce.10.25 < 0.5] # remove outliers
 fwrite(data.brt, './data_brt.csv')
 
+
 # BRT using ERA5 and MODIS LAI ----
 set.seed(1)
 gbms.era5 = dismo::gbm.step(
   data = data.brt,
-  gbm.x = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud'),
+  gbm.x = c('lai', 'trend_lai', 'vpd', 'solar', 'ws', 'albedo', 'cloud'),
   gbm.y = 'tce.10.25',
   family = 'gaussian',
   tree.complexity = 10,
@@ -72,14 +70,14 @@ dismo::gbm.plot(
 )
 gbms.era5$var.names
 bias(data.brt$tce.10.25, gbms.era5$fit)
-finalVariableOrder = c('lai', 'albedo', 'vpd', 'solar', 'cloud', 'gdp', 'ws')
+finalVariableOrder = c('lai', 'albedo', 'vpd', 'solar', 'cloud', 'trend_lai', 'ws')
 
 
 # BRT using ERA5 and Landsat LAI ----
 set.seed(1)
 gbms.era5.landsat = dismo::gbm.step(
   data = data.brt, # mask out cities with high cloud cover
-  gbm.x = c('lai2', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud'),
+  gbm.x = c('lai2', 'trend_lai', 'vpd', 'solar', 'ws', 'albedo', 'cloud'),
   gbm.y = 'tce.10.25',
   family = 'gaussian',
   tree.complexity = 10,
@@ -96,8 +94,8 @@ dismo::gbm.plot(
   show.contrib = T,
   plot.layout = c(2, 4)
 )
-gbms.era5.landsat$var.names = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
-gbms.era5.landsat$contributions$var = c('lai', 'albedo', 'solar', 'vpd', 'gdp', 'cloud', 'ws')
+gbms.era5.landsat$var.names = c('lai', 'trend_lai', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+gbms.era5.landsat$contributions$var = c('lai', 'albedo', 'solar', 'vpd', 'trend_lai', 'cloud', 'ws')
 bias(data.brt$tce.10.25, gbms.era5.landsat$fit)
 
 
@@ -105,7 +103,7 @@ bias(data.brt$tce.10.25, gbms.era5.landsat$fit)
 set.seed(1)
 gbms.mswx = dismo::gbm.step(
   data = data.brt, # mask out cities with high cloud cover
-  gbm.x = c('lai', 'gdp', 'mswx_vpd', 'mswx_solar', 'mswx_ws', 'albedo', 'cloud'),
+  gbm.x = c('lai', 'trend_lai', 'mswx_vpd', 'mswx_solar', 'mswx_ws', 'albedo', 'cloud'),
   gbm.y = 'tce.10.25',
   family = 'gaussian',
   tree.complexity = 10,
@@ -122,15 +120,15 @@ dismo::gbm.plot(
   show.contrib = T,
   plot.layout = c(2, 4)
 )
-gbms.mswx$var.names = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
-gbms.mswx$contributions$var = c('lai', 'albedo', 'solar', 'gdp', 'vpd', 'cloud', 'ws')
+gbms.mswx$var.names = c('lai', 'trend_lai', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+gbms.mswx$contributions$var = c('lai', 'albedo', 'solar', 'trend_lai', 'vpd', 'cloud', 'ws')
 bias(data.brt$tce.10.25, gbms.mswx$fit)
 
 # BRT using MSWX and Landsat LAI ----
 set.seed(1)
 gbms.mswx.landsat = dismo::gbm.step(
   data = data.brt, # mask out cities with high cloud cover
-  gbm.x = c('lai2', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud'),
+  gbm.x = c('lai2', 'trend_lai', 'vpd', 'solar', 'ws', 'albedo', 'cloud'),
   gbm.y = 'tce.10.25',
   family = 'gaussian',
   tree.complexity = 10,
@@ -147,8 +145,8 @@ dismo::gbm.plot(
   show.contrib = T,
   plot.layout = c(2, 4)
 )
-gbms.mswx.landsat$var.names = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
-gbms.mswx.landsat$contributions$var = c('lai', 'albedo', 'solar', 'vpd', 'gdp', 'cloud', 'ws')
+gbms.mswx.landsat$var.names = c('lai', 'trend_lai', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+gbms.mswx.landsat$contributions$var = c('lai', 'albedo', 'solar', 'vpd', 'trend_lai', 'cloud', 'ws')
 bias(data.brt$tce.10.25, gbms.mswx.landsat$fit)
 
 
@@ -189,29 +187,29 @@ marginalData.normalization = function(gbms, gbms.margin) {
 ## marginal data using ERA5 and MODIS LAI ----
 # data.margin.era5 = marginalData.normalization(gbms.era5, data.margin.era5.landsat)
 data.margin.era5 = marginalData(gbms.era5)
-names(data.margin.era5) = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+names(data.margin.era5) = c('lai', 'trend_lai', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
 data.margin.era5 = marginalData.normalization(gbms.era5, data.margin.era5)
-names(data.margin.era5) = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+names(data.margin.era5) = c('lai', 'trend_lai', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
 data.margin.era5 = data.margin.era5[finalVariableOrder]
 
 ## marginal data using ERA5 and Landsat LAI ----
 data.margin.era5.landsat = marginalData(gbms.era5.landsat)
-names(data.margin.era5.landsat) = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+names(data.margin.era5.landsat) = c('lai', 'trend_lai', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
 data.margin.era5.landsat = marginalData.normalization(gbms.era5.landsat, data.margin.era5.landsat)
-names(data.margin.era5.landsat) = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+names(data.margin.era5.landsat) = c('lai', 'trend_lai', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
 data.margin.era5.landsat = data.margin.era5.landsat[finalVariableOrder]
 
 ## marginal data using MSWX and MODIS LAI ----
 data.margin.mswx = marginalData(gbms.mswx)
-names(data.margin.mswx) = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+names(data.margin.mswx) = c('lai', 'trend_lai', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
 data.margin.mswx = marginalData.normalization(gbms.mswx, data.margin.mswx)
-names(data.margin.mswx) = c('lai', 'gdp', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
+names(data.margin.mswx) = c('lai', 'trend_lai', 'vpd', 'solar', 'ws', 'albedo', 'cloud')
 data.margin.mswx = data.margin.mswx[finalVariableOrder]
 
 ## settings ----
 ### par ----
 par(
-  cex.axis = 1.2,
+  cex.axis = 1,
   las = 1,
   lwd = 0.1,
   mai = c(0.4, 0.4, 0, 0.1),
@@ -233,8 +231,8 @@ xlims = list(
   c(0, 2.1),
   c(0, 320),
   c(0.1, 0.75),
-  c(-0.1, 2.5),
-  c(0, 5.5)
+  c(-0.02, 0.06),
+  c(-0.25, 5.4)
 )
 
 ### ylim ----
@@ -244,19 +242,19 @@ ylims.margin = list(
   c(-0.03, 0.07),
   c(-0.04, 0.08),
   c(-0.02, 0.02),
-  c(-0.04, 0.02),
+  c(-0.03, 0.03),
   c(-0.02, 0.04)
 )
 
 ### ylim (density plot) ----
 ylims.density = list(
   c(0, 1.3),
-  c(0, 30),
-  c(0, 1.8),
+  c(0, 31),
+  c(0, 1.7),
   c(0, 0.015),
-  c(0, 5),
-  c(0, 2.2),
-  c(0, 0.95)
+  c(0, 5.3),
+  c(0, 52),
+  c(0, 0.94)
 )
 
 ### at1 ----
@@ -265,9 +263,9 @@ at1 = list(
   c(-10, seq(0.1, 0.2, 0.03), 10),
   c(-10, seq(0.3, 2.5, 0.5), 10),
   c(-10, seq(50, 350, 70), 1000),
-  c(-1, seq(0, 1, 0.1), 2),
-  c(-10, seq(0.2, 2, 0.6), 10),
-  c(-10, seq(0.8, 10, 1), 100) 
+  c(-1, seq(0.2, 1, 0.15), 2),
+  c(-10, seq(-0.02, 0.04, 0.02), 10),
+  c(-10, seq(0.8, 10, 1.2), 100) 
 )
 
 ### at2 ----
@@ -288,7 +286,7 @@ var.names = c(
   'VPD (kPa)',
   expression('Solar radiation (W/m'^2 * ')'),
   'Cloud cover',
-  'GDP (1e+10 USD)',
+  'Trend in LAI (-/yr)',
   'Wind speed (m/s)'
 )
 
@@ -324,11 +322,13 @@ for (i in 1:length(data.margin.era5)) {
   
   # line
   if (i == 5) {
-    lines(smooth.spline(data.margin.era5[[i]], spar = 1.1), col = cols[i], lwd = 1.5)
-  } else if (i == 6){
-    lines(smooth.spline(data.margin.era5[[i]], spar = 0.7), col = cols[i], lwd = 1.5)
+    lines(smooth.spline(data.margin.era5[[i]], spar = 1.1), col = cols[i], lwd = 2.5)
+  } else if (i == 6) {
+    lines(smooth.spline(data.margin.era5[[i]], spar = 0.9), col = cols[i], lwd = 2.5)
+  } else if (i == 7) {
+    lines(smooth.spline(data.margin.era5[[i]], spar = 1), col = cols[i], lwd = 2.5)
   } else {
-    lines(smooth.spline(data.margin.era5[[i]], spar = 0.8), col = cols[i], lwd = 1.5)
+    lines(smooth.spline(data.margin.era5[[i]], spar = 0.8), col = cols[i], lwd = 2.5)
   }
   
   if (i == 1) {
@@ -346,7 +346,7 @@ for (i in 1:length(data.margin.era5)) {
       seg.len = 1,
       cex = 1,
       bty = 'n',
-      inset = c(-0.2, 0), x.intersp = 0.2, y.intersp = 0.5
+      inset = c(0.03, 0.02), x.intersp = 0.2, y.intersp = 0.9
     )
   }
   
@@ -357,23 +357,41 @@ for (i in 1:length(data.margin.era5)) {
       lines(smooth.spline(data.margin.mswx[[i]], spar = 1), col = cols[i], lwd = 1.5, lty = 'dashed')
     } else if (i == 5) {
       lines(smooth.spline(data.margin.mswx[[i]], spar = 1), col = cols[i], lwd = 1.5, lty = 'dashed')
+    } else if (i == 7) {
+      lines(smooth.spline(data.margin.mswx[[i]], spar = 0.9), col = cols[i], lwd = 1.5, lty = 'dashed')
     } else {
       lines(smooth.spline(data.margin.mswx[[i]], spar = 0.8), col = cols[i], lwd = 1.5, lty = 'dashed')
     }
     
     # legend
-    legend(
-      'topright', legend = c(
-        'ERA5',
-        'MSWX'
-      ), col = cols[i],
-      lty = c('solid', 'dashed'),
-      lwd = 1.2,
-      seg.len = 1,
-      cex = 1,
-      bty = 'n',
-      inset = c(-0.2, 0), x.intersp = 0.2, y.intersp = 0.5
-    )
+    if (i == 4) {
+      legend(
+        'topright', legend = c(
+          'ERA5',
+          'MSWX'
+        ), col = cols[i],
+        lty = c('solid', 'dashed'),
+        lwd = 1.2,
+        seg.len = 1,
+        cex = 1,
+        bty = 'n',
+        inset = c(0.4, 0.01), x.intersp = 0.2, y.intersp = 0.9
+      )
+    } else {
+      legend(
+        'topright', legend = c(
+          'ERA5',
+          'MSWX'
+        ), col = cols[i],
+        lty = c('solid', 'dashed'),
+        lwd = 1.2,
+        seg.len = 1,
+        cex = 1,
+        bty = 'n',
+        inset = c(0.03, 0.01), x.intersp = 0.2, y.intersp = 0.9
+      )
+    }
+
     
   }
   
@@ -385,8 +403,8 @@ for (i in 1:length(data.margin.era5)) {
   
   # figure number
   mtext(3, text = substitute(bold(letter), list(
-    letter = toupper(letters)[i]
-  )), line = -1.3, adj = 0.03, cex = cex.font - 0.3)
+    letter = paste0('(', letters, ')')[i]
+  )), line = -1.5, adj = 0.035, cex = cex.font - 0.3)
   
 }
 
@@ -435,5 +453,5 @@ axis(4, at = seq(-10, 35, 5), labels = F, lwd = 0.1, lwd.tick = 0)
 ## text ----
 mtext(1, text = 'Variables', line = label.line + 0.25, cex = cex.font - 0.3, las = 0)
 mtext(2, text = 'Relative contribution (%)', line = label.line + 0.4, cex = cex.font - 0.3, las = 0)
-mtext(3, text = substitute(bold(letter), list(letter = toupper(letters)[8])), line = -1.3, adj = 0.03, cex = cex.font - 0.2)
+mtext(3, text = substitute(bold(letter), list(letter = '(h)')), line = -1.5, adj = 0.035, cex = cex.font - 0.2)
 par(opar)
