@@ -402,7 +402,6 @@ for (i in 1:length(data.margin.era5)) {
         inset = c(0.03, 0.01), x.intersp = 0.2, y.intersp = 0.9
       )
     }
-
     
   }
   
