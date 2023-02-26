@@ -421,7 +421,7 @@ for (i in 1:length(data.margin.era5)) {
 
 
 # Plotting variable contribution ----
-## an ensemble of variable contribution from different combinations of the datasets ----
+## an ensemble of variable contribution from different combinations of the data ----
 contribution = Reduce(
   function(x, y) merge(x, y, by = 'var'), list(
     gbms.era5$contributions, gbms.era5.landsat$contributions, gbms.mswx$contributions, gbms.mswx.landsat$contributions
