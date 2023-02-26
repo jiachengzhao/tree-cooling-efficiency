@@ -9,32 +9,38 @@
 ## ----------------------------------
 
 
+
 # Prerequisite ----
 Sys.setenv(LANG = 'en')
 opar = par(no.readonly = T)
 require(smot)
 require(data.table)
 source('./functions.R')
+setwd('./data')
+
 
 
 # Data processing ----
-
 ## LST-tree cover scatters ----
 scatter = lapply(list.files(pattern = 'scatter.+gfcc+.csv$'), fread)
 # a basic filter
 scatter = lapply(scatter, scatter.filter)
 
+
 ## Tree cover ----
 tcc = lapply(list.files(pattern = 'tree_canopy_cover.+csv$'), fread)
 
-## Tree cover ----
+
+## Trend in tree cover ----
 trend.tcc = fread('./temporal_trends_in_tree_cover.csv')
+
 
 ## Climatic variables ----
 ### ERA 5 ----
 climate = grep(list.files(pattern = 'era5'), pattern = 'annually', invert = T, value = T)
 climate = lapply(climate, fread)
 lapply(climate, function(x) x[, c('air_temperature', 'gross_domestic_product') := .(air_temperature - 273.15, gross_domestic_product / 1e10)])
+
 
 ### MSWX ----
 climate2 = list.files(pattern = 'climate_variables_mswx.+csv$')
@@ -44,8 +50,10 @@ lapply(climate2, function(x) {
   setnames(x, 1:6, c('id', paste0('mswx_', cols)))
 })
 
+
 ## Albedo ----
 albedo = lapply(list.files(pattern = 'albedo.+csv$'), fread)
+
 
 ## LAI ----
 ### MODIS LAI ----
@@ -53,14 +61,18 @@ lai = lapply(list.files(pattern = '^lai.*modis'), fread)
 ### Landsat LAI ----
 lai2 = lapply(list.files(pattern = '^lai.*landsat'), fread)
 
+
 ## Trends in LAI, AOD and RH ----
 slope = fread('./slope_of_lai_aod_and_rh_landsat.csv')
+
 
 ## Elevation standard deviation (sd) ----
 esd = fread('./elevation_sd.csv', na.strings = NULL)
 
+
 ## Region and country ----
 region = fread('./region.csv', na.strings = NULL)
+
 
 
 # Generation of TCE ----
@@ -104,6 +116,7 @@ for (i in 1:4) {
     )
   )
 }
+
 
 
 # Data integration ----
