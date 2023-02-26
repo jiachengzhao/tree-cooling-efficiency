@@ -1,12 +1,14 @@
 ## ----------------------------------
 # Title: Sensitivity test
-# Objective: To test parameter sensitivity of BRT model
+# Objective: To test parameter sensitivity of boosted regression tree (BRT) model
 # Created by: Jiacheng Zhao
 # Created on: 2022-05-10
 # Copyright (c) Jiacheng Zhao, 2022
 # Beijing Normal University
 # Email: zhaojiacheng@mail.bnu.edu.cn
 ## ----------------------------------
+
+
 
 sens = data.table(
   tc = c(rep(5, 12), rep(10, 12)),
