@@ -8,6 +8,8 @@
 # Email: zhaojiacheng@mail.bnu.edu.cn
 ## ----------------------------------
 
+
+
 # Functions ----
 scatter.filter = function(data) {
   DT = copy(data)
@@ -74,16 +76,47 @@ pf = function(data) {
   error = function(e) {})
 }
 
-tce.generator = function(data) {
-  rl = rbindlist(
-    parallel::mclapply(split(data, by = c('id', 'image_id')), FUN = pf)
-  )
-  # TCE at 10 % tree canopy cover
-  rl[, tce.10 := a * b * 10 ^ (b - 1)]
-  # TCE at 20 % tree canopy cover
-  rl[, tce.20 := a * b * 20 ^ (b - 1)]
-  # TCE at 30 % tree canopy cover
-  rl[, tce.30 := a * b * 30 ^ (b - 1)]
+lf = function(data) {
+  tryCatch({
+    fit = lm(
+      median ~ cover_class,
+      data = data
+    )
+    list(
+      id = data$id[1],
+      image_id = data$image_id[1],
+      air_temperature = data$air_temperature[1],
+      a = as.numeric(coef(fit)[1]),
+      b = as.numeric(coef(fit)[2]),
+      r2 = as.numeric(bias(data$median, predict(fit))[1])
+    )
+  },
+  warning = function(w) {},
+  error = function(e) {})
+}
+
+tce.generator = function(data, linear.tce = F) {
+  if (linear.tce == T) {
+    rl = rbindlist(
+      parallel::mclapply(split(data, by = c('id', 'image_id')), FUN = lf)
+    )
+    # TCE at 10 % tree canopy cover
+    rl[, tce.10 := b]
+    # TCE at 20 % tree canopy cover
+    rl[, tce.20 := b]
+    # TCE at 30 % tree canopy cover
+    rl[, tce.30 := b]
+  } else {
+    rl = rbindlist(
+      parallel::mclapply(split(data, by = c('id', 'image_id')), FUN = pf)
+    )
+    # TCE at 10 % tree canopy cover
+    rl[, tce.10 := a * b * 10 ^ (b - 1)]
+    # TCE at 20 % tree canopy cover
+    rl[, tce.20 := a * b * 20 ^ (b - 1)]
+    # TCE at 30 % tree canopy cover
+    rl[, tce.30 := a * b * 30 ^ (b - 1)]
+  }
   return(rl)
 }
 
@@ -204,6 +237,61 @@ tce.generator2 = function(data) {
   )
   
   return(DT)
+  
+}
+
+bio.tce = function(
+    Rsw,
+    alpha_i, alpha_v,
+    Ts, Tl, Ta, rh, Pa,
+    fc, # tree fraction
+    rs, ra,
+    Qah = 0, # anthropogenic heat
+    return.vpd = F
+) {
+  
+  vp = function(temperature) {
+    611 * exp(17.27 * temperature / (temperature + 237.3))
+  }
+  delta = function(temperature) {
+    e = vp(temperature)
+    17.27 * 237.3 * e / (temperature + 237.3) ^ 2 
+  }
+  dew = function(rh, temperature) {
+    a = 17.625
+    b = 243.04
+    alpha = log(rh / 100) + a * temperature / (b + temperature)
+    b * alpha / (a - alpha)
+  }
+  
+  epsilon = 0.98 # emissivity [-]
+  sigma = 5.67e-08 # Stefan-Boltzmann constant [W/(m^2·K^4)]
+  Ts_celsius = Ts - 273.15 # surface temperature in Celsius [°C]
+  Tl_celsius = Tl - 273.15 
+  Ta_celsius = Ta - 273.15 # air temperature in Celsius [°C]
+  Ta_dew_celsius = dew(rh, Ta_celsius) # dew point temperature in Celsius [°C]
+  esat = vp(Tl_celsius) # saturation vapor pressure [Pa]
+  ea = vp(Ta_dew_celsius) # actual vapor pressure [Pa]
+  vpd = esat - ea # vapor pressure deficit [Pa]
+  rho_a = Pa / (287.04 * Ta) * (1 - ea / Pa * (1 - 0.622)) # air density [kg/m^3]
+  Cp = 1005 + (Ta + 23.15) ^ 2 / 3364 # specific heat capacity of air at constant pressure [J/(kg·K)]
+  gamma = 67  # psychrometric constant [Pa/K]
+  delta_s = delta(Tl_celsius) # slope of saturation vapor pressure curve [Pa/K]
+  delta_a = delta(Ta_dew_celsius) # slope of actual vapor pressure curve [Pa/K]
+  delta_Ta = as.numeric(coef(lm(Ta ~ seq(0.2, 0.8, 0.2)))[2]) # sensitivity of Ta to fc
+  delta_ra = as.numeric(coef(lm(ra ~ seq(0.2, 0.8, 0.2)))[2]) # sensitivity of aerodynamic resistance to fc
+  
+  fs = 4 * epsilon * sigma * Ts ^ 3 + (rho_a * Cp) / ra + (fc * rho_a * Cp * delta_s) / (gamma * (rs + ra))
+  fa = rho_a * Cp / ra + (fc * rho_a * Cp * delta_a) / (gamma * (rs + ra))
+  fra = rho_a * Cp * (Ts - Ta) / ra ^ 2 + (fc * rho_a * Cp * vpd) / (gamma * (rs + ra) ^ 2)
+  
+  tce = (Rsw * (alpha_i - alpha_v) - Qah - (rho_a * Cp * vpd) / (gamma * (rs + ra)) + fa * delta_Ta + fra * delta_ra) / fs
+  
+  if (return.vpd) {
+    return(vpd / 1000)
+  } else {
+    return(-tce / 100)
+  }
   
 }
 
