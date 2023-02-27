@@ -8,7 +8,9 @@
 # Email: zhaojiacheng@mail.bnu.edu.cn
 ## ----------------------------------
 
-# data (2010) ----
+
+
+# Data (2010) ----
 relation = tce.filtered[[3]]
 # city id and name
 name = data.table(
@@ -20,9 +22,10 @@ name = data.table(
 )
 
 
+
 # par ----
 par(
-  cex.axis = 1,
+  cex.axis = 0.9,
   las = 1,
   lwd = 0.1,
   mai = c(0.2, 0.3, 0.25, 0.15),
@@ -32,7 +35,8 @@ par(
 )
 
 
-# plotting ----
+
+# Plotting ----
 for (i in 1:nrow(name)) {
   d = relation[id == name$id[i], .(air_temperature, tce.10)]
   d[, tce.10 := abs(tce.10)]
@@ -53,10 +57,7 @@ for (i in 1:nrow(name)) {
   if (i %in% seq(4, 16, 4)) mtext(1, text = expression('T'[a] * ' (' * degree * 'C)'), line = 1.9, cex = 0.7, las = 0)
   if (i %in% 1:4) mtext(2, text = expression('TCE.10 (' * degree * 'C/%)'), line = 2.8, cex = 0.7, las = 0)
   title(name[, name][i], adj = 0.955, line = -6, font.main = 1, col.main = 'black', cex.main = 1)
-  title(addlmeq(fit, 3), adj = 0.18, line = -0.8, col.main = 'black', cex.main = 1)
-  title(addr2(d$tce.10, predict(fit)), adj = 0.085, line = -1.8, col.main = 'black', cex.main = 1)
+  title(addlmeq(fit, 3), adj = 0.18, line = -0.8, col.main = 'black', cex.main = 0.9)
+  title(addr2(d$tce.10, predict(fit)), adj = 0.085, line = -1.8, col.main = 'black', cex.main = 0.9)
 }
-
-
-# opar ----
 par(opar)
