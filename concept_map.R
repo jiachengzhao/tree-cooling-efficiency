@@ -8,13 +8,16 @@
 # Email: zhaojiacheng@mail.bnu.edu.cn
 ## ----------------------------------
 
+
+
 library(data.table)
 opar = par(no.readonly = T)
 
-# settings ----
+
+
+# Settings ----
 # par
 par(
-  # family = 'Calibri',
   cex.axis = 0.9,
   las = 1,
   lwd = 0.1,
@@ -22,19 +25,20 @@ par(
   mfrow = c(1, 2),
   oma = c(2, 2, 2, 0),
   pty = 's',
-  tck = 0.02
+  tck = 0.018
 )
 cex.font = 0.9; cex.legend = 0.8
 lwd = 2.5; lwd.axis = 0.7
 seg.len = 1.5
 cols = c('blueviolet', 'green1', 'red1')
 col.slope = 'black'
-x.intersp = 0.9; y.intersp = 0.7
+x.intersp = 0.9; y.intersp = 1
 inset = c(0, 0)
 label.line = 1.3
 
 
-# plot 1 ----
+
+# Plot 1 ----
 plot(
   0, type = 'n',
   xaxs = 'i', yaxs = 'i',
@@ -79,15 +83,15 @@ segments(0, a3 * 20 ^ b3, 22, a3 * 20 ^ b3, lty = 'dashed', lwd = 0.8)
 arrows(20, a[3] * 20 ^ b[3], 20, a[3] * 10 ^ b[3], length = 0.05, angle = 25, code = 3, lwd = 0.5)
 arrows(10, a[3] * 20 ^ b[3], 20, a[3] * 20 ^ b[3], length = 0.05, angle = 25, code = 3, lwd = 0.5)
 # annotation
-text(20, 28.5, labels = expression('TCE = -' * Delta * 'LST/' * Delta * 'TCC'), cex = cex.legend)
-text(16, 20.5, labels = 'TCC changes', cex = cex.legend)
+text(22, 28.5, labels = expression('TCE = -' * Delta * 'LST/' * Delta * 'tree cover'), cex = cex.legend)
+text(22, 20.5, labels = 'Tree cover changes', cex = cex.legend)
 text(30, 24.4, labels = 'Cooling benefits', cex = cex.legend)
 # axis label
-mtext(1, text = 'TCC (%)', line = label.line, cex = cex.font + 0.1)
+mtext(1, text = 'Tree cover (%)', line = label.line, cex = cex.font + 0.1)
 mtext(2, text = expression('LST (' * degree * 'C)'), line = label.line + 0.2, cex = cex.font + 0.1, las = 0)
 # legend
 legend(
-  'topright',
+  30, 39.5,
   legend = c(
     expression('Low T'[a]),
     expression('Medium T'[a]),
@@ -103,8 +107,9 @@ legend(
   inset = c(-0.1, 0)
 )
 
-# plot 2 ----
-# jplot(xlim = c(0, 40), ylim = c(0, 0.45), at2 = seq(0, 0.5, 0.1))
+
+
+# Plot 2 ----
 plot(
   0, type = 'n',
   xaxs = 'i', yaxs = 'i',
@@ -136,11 +141,11 @@ mtext(1, text = expression('T'[a] * ' (' * degree * 'C)'), line = label.line, ce
 mtext(2, text = expression('TCE (' * degree * 'C/%)'), line = label.line + 0.2, cex = cex.font, las = 0)
 # legend
 legend(
-  'topleft',
+  0.8, 0.39,
   legend = c(
-    'Low TCC',
-    'Medium TCC',
-    'High TCC'
+    'Low tree cover',
+    'Medium tree cover',
+    'High tree cover'
   ),
   lty = rep('solid', 3),
   seg.len = seg.len,
