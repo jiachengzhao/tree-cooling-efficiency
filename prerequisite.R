@@ -121,3 +121,4 @@ for (i in 1:4) {
 
 # Data integration ----
 re = Reduce(function(x, y) data.table::merge.data.table(x, y, by = c('id', 'lon', 'lat', 'region', 'country'), all = T), dl)
+setwd('C:/Users/zhao_/Nutstore/1/Nutstore/Projects/Urban tree cooling efficiency/tree-cooling-efficiency')
