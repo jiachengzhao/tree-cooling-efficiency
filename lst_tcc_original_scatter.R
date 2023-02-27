@@ -37,7 +37,7 @@ addeq = function(fit, decimal = 2) {
 
 scatters <- function(
   tree, lst,
-  xlabel = expression(bold(paste('TCC (%)'))),
+  xlabel = expression(bold(paste('Tree cover (%)'))),
   ylabel = expression(bold(paste('LST (', degree, 'C)', sep = ''))),
   main, city.name
 ) {
@@ -55,10 +55,11 @@ scatters <- function(
   # plotting original scatters
   scattermore::scattermoreplot(
     d$x, d$y,
-    xaxt = 'n', yaxt = 'n',
+    axes = F, ann = F,
     xaxs = 'i', yaxs = 'i',
+    # xlim = c(0, 80), ylim = c(20, 60),
     xlab = '', ylab = '',
-    col = rgb(0.25, 0.5, 0.75, 0.1)
+    col = rgb(0.25, 0.5, 0.75, 1)
   )
   # non-linear regression
   fit <- nls(
@@ -87,17 +88,17 @@ scatters <- function(
   mtext(2, text = ylabel, line = 1.5, cex = 0.7, las = 0)
   # add title and r2
   mtext(main, side = 3, line = 0.1, font = 2, cex = 0.75)
-  title(city.name, adj = 0.955, line = -1, font.main = 1, col.main = 'black', cex.main = 1.1)
-  title(addeq(fit), adj = 0.955, line = -2, col.main = 'black', cex.main = 1.1)
-  title(addr2(db$y, predict(fit)), adj = 0.955, line = -3, col.main = 'black', cex.main = 1.1)
+  title(city.name, adj = 0.955, line = -1, font.main = 1, col.main = 'black', cex.main = 1)
+  title(addeq(fit), adj = 0.955, line = -2, col.main = 'black', cex.main = 1)
+  title(addr2(db$y, predict(fit)), adj = 0.955, line = -3, col.main = 'black', cex.main = 1)
 }
 
 # Plot parameters ------------------------------------------------------------------------------------------------------
 par(
-  cex.axis = 1,
+  cex.axis = 0.9,
   family = 'sans',
   las = 1,
-  mai = c(0.1, 0.1, 0.1, 0.1),
+  mai = c(0.15, 0.2, 0.15, 0.2),
   mfcol = c(4, 5),
   oma = c(2.5, 2.5, 2, 0.2),
   # pty = 's',
