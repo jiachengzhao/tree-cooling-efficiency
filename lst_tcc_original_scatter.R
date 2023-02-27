@@ -7,21 +7,13 @@
 # Email: zhaojiacheng@mail.bnu.edu.cn
 
 
-# Functions ------------------------------------------------------------------------------------------------------------
-# ## function to mosaic images ----
-# tif.process <- function(n) {
-#   tif.list <- list()
-#   for (i in 1:length(tif.files)) {
-#     tif.list[[i]] <- stack(tif.files[i])[[n]]
-#   }
-#   tif.list$fun <- mean # use mean function to mosaic
-#   m <- do.call(mosaic, tif.list)
-#   names(m) <- names(tif.list[[1]])
-#   return(m)
-# }
+
 opar = par(no.readonly = T)
 library(smot)
-## function to plot scatters ----
+
+
+
+# Functions ----
 addeq = function(fit, decimal = 2) {
     eq = substitute(
       italic('y') ~ '=' ~ b * italic('x') ^ a,
@@ -32,8 +24,6 @@ addeq = function(fit, decimal = 2) {
     )
   return(eq)
 }
-
-
 
 scatters <- function(
   tree, lst,
@@ -59,7 +49,8 @@ scatters <- function(
     xaxs = 'i', yaxs = 'i',
     # xlim = c(0, 80), ylim = c(20, 60),
     xlab = '', ylab = '',
-    col = rgb(0.25, 0.5, 0.75, 1)
+    col = rgb(0.25, 0.5, 0.75, 1),
+    cex = 0.4
   )
   # non-linear regression
   fit <- nls(
@@ -93,7 +84,9 @@ scatters <- function(
   title(addr2(db$y, predict(fit)), adj = 0.955, line = -3, col.main = 'black', cex.main = 1)
 }
 
-# Plot parameters ------------------------------------------------------------------------------------------------------
+
+
+# Plot parameters ----
 par(
   cex.axis = 0.9,
   family = 'sans',
@@ -105,7 +98,9 @@ par(
   tck = 0.025
 )
 
-# Scatter plots --------------------------------------------------------------------------------------------------------
+
+
+# Scatter plots ----
 sp <- function(direction) {
   dir = list.dirs(direction)[-1]
   for (j in 1:length(dir)) {
@@ -164,5 +159,4 @@ sp <- function(direction) {
   }
 }
 sp('./tce scatter images')
-
 par(opar)
