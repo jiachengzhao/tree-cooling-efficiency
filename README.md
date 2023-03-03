@@ -1,1 +1,1 @@
-# This repository shares the data and R code that support the findings of the study 'Satellite-based evidence highlights a considerable increase of urban tree cooling benefits from 2000 to 2015' published in Global Change Biology (GCB).
+This repository shares the data and R code that support the findings of the study 'Satellite-based evidence highlights a considerable increase of urban tree cooling benefits from 2000 to 2015' published in Global Change Biology (GCB).
